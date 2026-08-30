@@ -57,9 +57,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "That email address doesn't look valid." });
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  const toEmail = process.env.FEEDBACK_TO_EMAIL || "chef@designpav.in";
-  const fromEmail = process.env.RESEND_FROM_EMAIL || "DrawBoard Feedback <onboarding@resend.dev>";
+  // Strip stray BOM/whitespace some tooling adds when setting env vars
+  // (a leading U+FEFF here breaks fetch's header encoding with a cryptic error).
+  const BOM = String.fromCharCode(0xfeff);
+  const clean = (v: string | undefined) => v?.split(BOM).join("").trim();
+
+  const apiKey = clean(process.env.RESEND_API_KEY);
+  const toEmail = clean(process.env.FEEDBACK_TO_EMAIL) || "chef@designpav.in";
+  const fromEmail = clean(process.env.RESEND_FROM_EMAIL) || "DrawBoard Feedback <onboarding@resend.dev>";
 
   if (!apiKey) {
     console.error("RESEND_API_KEY is not set");
