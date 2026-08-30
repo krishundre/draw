@@ -1,0 +1,39 @@
+{
+  "name": "drawboard",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "server": "node server/index.js",
+    "dev:all": "concurrently -n web,server -c blue,green \"npm:dev\" \"npm:server\"",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@types/ws": "^8.18.1",
+    "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^10.0.5",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2",
+    "ws": "^8.21.3"
+  },
+  "dependencies": {
+    "lib0": "^0.2.117",
+    "marked": "^18.0.11",
+    "nanoid": "^6.0.1",
+    "perfect-freehand": "^1.2.3",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.3",
+    "roughjs": "^4.6.6",
+    "y-indexeddb": "^9.0.12",
+    "y-protocols": "^1.0.7",
+    "y-websocket": "^3.1.0",
+    "yjs": "^13.6.32",
+    "zustand": "^5.0.15"
+  }
+}
