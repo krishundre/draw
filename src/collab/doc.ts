@@ -1,6 +1,6 @@
 import * as Y from "yjs";
-import { WebsocketProvider } from "y-websocket";
 import { IndexeddbPersistence } from "y-indexeddb";
+import type { WebsocketProvider } from "y-websocket";
 import type { WhiteboardElement } from "../types";
 
 function getRoomFromUrl(): string {
@@ -21,10 +21,25 @@ const WS_URL = (import.meta.env.VITE_COLLAB_WS_URL as string | undefined) ?? "ws
 
 let provider: WebsocketProvider | null = null;
 
-export function connectCollab(username: string, color: string) {
+// y-websocket (the collaboration client) is only needed by the small minority
+// of visitors who actually click "Share" — it's dynamically imported here
+// instead of at module load, so everyone else doesn't pay for it. Listeners
+// (Canvas's cursor broadcast, CursorsOverlay) subscribe to this to react once
+// the provider becomes available, since they may already be mounted by then.
+const collabEvents = new EventTarget();
+
+export function onCollabConnected(cb: () => void): () => void {
+  collabEvents.addEventListener("connected", cb);
+  return () => collabEvents.removeEventListener("connected", cb);
+}
+
+export async function connectCollab(username: string, color: string) {
   if (provider) return provider;
+  const { WebsocketProvider } = await import("y-websocket");
+  if (provider) return provider; // guard against a concurrent call finishing first
   provider = new WebsocketProvider(WS_URL, roomId, ydoc, { connect: true });
   provider.awareness.setLocalStateField("user", { name: username, color });
+  collabEvents.dispatchEvent(new Event("connected"));
   return provider;
 }
 

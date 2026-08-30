@@ -25,7 +25,7 @@ export function TopRightBar({ onOpenLibrary, onOpenHelp }: { onOpenLibrary: () =
     setAppState({ theme: appState.theme === "light" ? "dark" : "light" });
   }
 
-  function handleShare() {
+  async function handleShare() {
     if (!connected) {
       let name = localStorage.getItem(NAME_KEY);
       if (!name) {
@@ -37,7 +37,7 @@ export function TopRightBar({ onOpenLibrary, onOpenHelp }: { onOpenLibrary: () =
         color = COLORS[Math.floor(Math.random() * COLORS.length)];
         localStorage.setItem(COLOR_KEY, color);
       }
-      connectCollab(name, color);
+      await connectCollab(name, color);
       setConnected(true);
     }
     setShareOpen((v) => !v);

@@ -13,7 +13,7 @@ import type { ArrowElement, DrawElement, LineElement, Point, TextElement, Whiteb
 import { TextEditorOverlay } from "../components/TextEditorOverlay";
 import { SelectionOverlay } from "../components/SelectionOverlay";
 import { CursorsOverlay } from "../components/CursorsOverlay";
-import { getProvider } from "../collab/doc";
+import { getProvider, onCollabConnected } from "../collab/doc";
 
 type DragMode =
   | { kind: "none" }
@@ -339,7 +339,15 @@ export function Canvas() {
     }
   }
 
-  // remote cursor broadcast
+  // remote cursor broadcast — the collab client loads lazily (only once the
+  // user clicks Share), so this may need to attach after this component has
+  // already mounted.
+  const [collabConnected, setCollabConnected] = useState(() => Boolean(getProvider()));
+  useEffect(() => {
+    if (collabConnected) return;
+    return onCollabConnected(() => setCollabConnected(true));
+  }, [collabConnected]);
+
   useEffect(() => {
     const provider = getProvider();
     if (!provider) return;
@@ -349,7 +357,7 @@ export function Canvas() {
     };
     window.addEventListener("pointermove", onMove);
     return () => window.removeEventListener("pointermove", onMove);
-  }, [toWorld]);
+  }, [toWorld, collabConnected]);
 
   const drag = dragRef.current;
   const cursorStyle = appState.tool === "hand" || spaceHeld.current ? "grab" : appState.tool === "selection" ? "default" : "crosshair";

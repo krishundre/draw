@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getProvider } from "../collab/doc";
+import { getProvider, onCollabConnected } from "../collab/doc";
 
 interface RemoteState {
   user?: { name: string; color: string };
@@ -8,6 +8,14 @@ interface RemoteState {
 
 export function CursorsOverlay({ scrollX, scrollY, zoom }: { scrollX: number; scrollY: number; zoom: number }) {
   const [states, setStates] = useState<RemoteState[]>([]);
+  const [connected, setConnected] = useState(() => Boolean(getProvider()));
+
+  // The collab client loads lazily (only once the user clicks Share), so this
+  // may mount well before a provider exists — listen for it to show up.
+  useEffect(() => {
+    if (connected) return;
+    return onCollabConnected(() => setConnected(true));
+  }, [connected]);
 
   useEffect(() => {
     const provider = getProvider();
@@ -19,7 +27,7 @@ export function CursorsOverlay({ scrollX, scrollY, zoom }: { scrollX: number; sc
     provider.awareness.on("change", update);
     update();
     return () => provider.awareness.off("change", update);
-  }, []);
+  }, [connected]);
 
   return (
     <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
