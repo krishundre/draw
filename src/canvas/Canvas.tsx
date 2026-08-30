@@ -24,13 +24,18 @@ type DragMode =
   | { kind: "rotating"; centerX: number; centerY: number; startAngle: number; origin: Map<string, number> }
   | { kind: "panning"; startX: number; startY: number; startScrollX: number; startScrollY: number }
   | { kind: "selecting"; startX: number; startY: number; endX: number; endY: number }
-  | { kind: "erasing" };
+  | { kind: "erasing" }
+  | { kind: "pinching"; startDistance: number; startZoom: number; startScrollX: number; startScrollY: number; startMidX: number; startMidY: number };
 
 export function Canvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragMode>({ kind: "none" });
   const spaceHeld = useRef(false);
+  // Active touch pointers, for pinch-zoom / two-finger pan. Tracked separately
+  // from dragRef's single-pointer drawing/selection states so a second finger
+  // landing mid-gesture can cleanly interrupt whatever the first finger started.
+  const touchesRef = useRef<Map<number, Point>>(new Map());
   const [, forceRender] = useState(0);
 
   const { elements, appState, setAppState, addElement, updateElement, deleteElements, commitHistory, setSelectedIds, setTool } = useStore();
@@ -120,6 +125,34 @@ export function Canvas() {
     } catch {
       // ignore: capture is best-effort (e.g. synthetic events, some touch browsers)
     }
+
+    if (e.pointerType === "touch") {
+      touchesRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touchesRef.current.size === 2) {
+        // A second finger just landed — abandon whatever the first finger's
+        // single-pointer gesture was doing (e.g. discard an in-progress,
+        // not-yet-committed shape) and switch to pinch-zoom/two-finger pan.
+        const inProgress = dragRef.current;
+        if (inProgress.kind === "drawing") {
+          const el = useStore.getState().elements.find((x) => x.id === inProgress.elementId);
+          if (el && el.width < 3 && el.height < 3) deleteElements([el.id]);
+        }
+        const pts = Array.from(touchesRef.current.values());
+        const startDistance = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+        dragRef.current = {
+          kind: "pinching",
+          startDistance,
+          startZoom: appState.zoom,
+          startScrollX: appState.scrollX,
+          startScrollY: appState.scrollY,
+          startMidX: (pts[0].x + pts[1].x) / 2,
+          startMidY: (pts[0].y + pts[1].y) / 2,
+        };
+        return;
+      }
+      if (touchesRef.current.size > 2) return; // ignore a 3rd+ finger
+    }
+
     const world = toWorld(e.clientX, e.clientY);
     const isPan = appState.tool === "hand" || spaceHeld.current || e.button === 1;
 
@@ -193,6 +226,32 @@ export function Canvas() {
 
   function handlePointerMove(e: React.PointerEvent) {
     const drag = dragRef.current;
+
+    if (e.pointerType === "touch" && touchesRef.current.has(e.pointerId)) {
+      touchesRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+
+    if (drag.kind === "pinching") {
+      const pts = Array.from(touchesRef.current.values());
+      if (pts.length < 2) return;
+      const distance = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+      const midX = (pts[0].x + pts[1].x) / 2;
+      const midY = (pts[0].y + pts[1].y) / 2;
+      const newZoom = Math.min(30, Math.max(0.1, drag.startZoom * (distance / drag.startDistance)));
+      const rect = canvasRef.current!.getBoundingClientRect();
+      // The world point that was under the fingers' starting midpoint should
+      // stay under their current midpoint — that single constraint gives both
+      // zoom-around-pinch-center and two-finger pan at once.
+      const anchorWorldX = (drag.startMidX - rect.left - drag.startScrollX) / drag.startZoom;
+      const anchorWorldY = (drag.startMidY - rect.top - drag.startScrollY) / drag.startZoom;
+      setAppState({
+        zoom: newZoom,
+        scrollX: midX - rect.left - anchorWorldX * newZoom,
+        scrollY: midY - rect.top - anchorWorldY * newZoom,
+      });
+      return;
+    }
+
     if (drag.kind === "none") return;
     const world = toWorld(e.clientX, e.clientY);
 
@@ -295,7 +354,15 @@ export function Canvas() {
     });
   }
 
-  function handlePointerUp() {
+  function handlePointerUp(e: React.PointerEvent) {
+    if (e.pointerType === "touch") {
+      touchesRef.current.delete(e.pointerId);
+      if (dragRef.current.kind === "pinching") {
+        if (touchesRef.current.size >= 2) return; // another finger still down mid-pinch
+        dragRef.current = { kind: "none" };
+        return;
+      }
+    }
     const drag = dragRef.current;
     if (drag.kind === "drawing") {
       const el = useStore.getState().elements.find((x) => x.id === drag.elementId);
@@ -378,6 +445,7 @@ export function Canvas() {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         onWheel={handleWheel}
         onDoubleClick={handleDoubleClick}
       />

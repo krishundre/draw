@@ -46,6 +46,44 @@ body,
   overflow: hidden;
 }
 
+.not-found-page {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--text);
+  text-align: center;
+  padding: 20px;
+}
+
+.not-found-card h1 {
+  font-size: 28px;
+  margin: 0 0 8px;
+}
+
+.not-found-card p {
+  color: var(--text-muted);
+  margin: 0 0 20px;
+}
+
+.not-found-links {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.not-found-links a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.not-found-links a:hover {
+  text-decoration: underline;
+}
+
 /* Visually hidden but present in the DOM — for real content that should stay
    readable to screen readers and crawlers without appearing in the UI. */
 .sr-only {
@@ -74,6 +112,14 @@ button {
   gap: 8px;
   align-items: flex-start;
   z-index: 5;
+  /* Never claim more than the left half of the viewport, and never claim more
+     than .top-right-bar does on its side (below) — together those two
+     invariants guarantee the bars can't overlap and steal each other's
+     clicks, regardless of exact content width. The toolbar scrolls
+     internally instead of overflowing off the edge of the viewport. Both
+     were real bugs on anything narrower than ~860px: tablets in portrait,
+     most phones, and narrow desktop windows. */
+  max-width: calc(50vw - 20px);
 }
 
 .toolbar,
@@ -84,6 +130,20 @@ button {
   padding: 4px;
   display: flex;
   gap: 2px;
+}
+
+.toolbar {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.toolbar .tool-btn {
+  flex-shrink: 0;
+}
+
+.menu-wrap {
+  flex-shrink: 0;
 }
 
 .tool-btn {
@@ -280,8 +340,13 @@ select {
   top: 12px;
   right: 12px;
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
   z-index: 6;
+  /* Mirror .top-left-bar's half-viewport cap — see its comment. Wraps to a
+     second row rather than overlapping the toolbar on narrow viewports. */
+  max-width: calc(50vw - 20px);
 }
 
 .dropdown {

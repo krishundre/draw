@@ -6,11 +6,43 @@
 interface VercelRequest {
   method?: string;
   body?: unknown;
+  headers: Record<string, string | string[] | undefined>;
 }
 interface VercelResponse {
   status(code: number): VercelResponse;
   json(body: unknown): void;
   setHeader(name: string, value: string): void;
+}
+
+// Best-effort in-memory rate limit: N requests per IP per window. This is not
+// perfectly robust — a serverless function can have multiple concurrent
+// instances that don't share this Map, and it resets on a cold start — but it
+// costs no extra infrastructure/dependency and stops the common case (a
+// single script hammering the endpoint from one place), which is what the
+// honeypot alone doesn't cover. A shared store (Vercel KV/Upstash) would be
+// needed for a airtight global limit across all instances.
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const requestLog = new Map<string, number[]>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const timestamps = (requestLog.get(ip) ?? []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  timestamps.push(now);
+  requestLog.set(ip, timestamps);
+  // opportunistically prevent unbounded growth across many distinct IPs
+  if (requestLog.size > 5000) {
+    for (const [key, times] of requestLog) {
+      if (times.every((t) => now - t >= RATE_LIMIT_WINDOW_MS)) requestLog.delete(key);
+    }
+  }
+  return timestamps.length > RATE_LIMIT_MAX;
+}
+
+function getClientIp(req: VercelRequest): string {
+  const fwd = req.headers["x-forwarded-for"];
+  const first = Array.isArray(fwd) ? fwd[0] : fwd;
+  return first?.split(",")[0]?.trim() || "unknown";
 }
 
 interface FeedbackBody {
@@ -37,6 +69,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (isRateLimited(getClientIp(req))) {
+    return res.status(429).json({ error: "Too many requests. Please try again in a few minutes." });
   }
 
   const body = (req.body ?? {}) as FeedbackBody;

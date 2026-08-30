@@ -9,7 +9,12 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- user-scalable/maximum-scale are intentionally NOT restricted — disabling
+         pinch-zoom blocks low-vision users from zooming the page (WCAG 1.4.4/
+         1.4.10). The canvas itself opts out of the browser's own touch gesture
+         handling via `touch-action: none` (see Canvas.tsx), so page pinch-zoom
+         and the canvas's own pinch-to-zoom-the-drawing don't conflict. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#121212" />
 
     <title>DrawBoard — Free Open-Source Whiteboard</title>

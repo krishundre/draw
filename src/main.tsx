@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./App";
 import { DocsLayout } from "./docs/DocsLayout";
+import { NotFoundPage } from "./components/NotFoundPage";
 import "./style.css";
 import "./docs/docs.css";
 import { useStore } from "./state/store";
@@ -18,6 +19,7 @@ createRoot(document.getElementById("app")!).render(
         <Route path="/" element={<App />} />
         <Route path="/docs" element={<DocsLayout />} />
         <Route path="/docs/:slug" element={<DocsLayout />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>
