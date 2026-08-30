@@ -56,6 +56,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (body.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
     return res.status(400).json({ error: "That email address doesn't look valid." });
   }
+  if ((body.name?.length ?? 0) > 200) {
+    return res.status(400).json({ error: "Name is too long (max 200 characters)." });
+  }
+  if ((body.email?.length ?? 0) > 200) {
+    return res.status(400).json({ error: "Email is too long (max 200 characters)." });
+  }
 
   // Strip stray BOM/whitespace some tooling adds when setting env vars
   // (a leading U+FEFF here breaks fetch's header encoding with a cryptic error).

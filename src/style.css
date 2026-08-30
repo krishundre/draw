@@ -112,7 +112,11 @@ button {
 .tool-btn.primary {
   width: auto;
   padding: 0 12px;
-  background: var(--accent);
+  /* var(--accent) (#4dabf7) only gives a 2.47:1 contrast ratio with white text —
+     well under the WCAG AA 4.5:1 minimum for normal-size text. This darker
+     blue (already used elsewhere as a stroke-color preset, so still on-brand)
+     passes at ~5.1:1. */
+  background: #1971c2;
   color: white;
   font-size: 13px;
   font-weight: 600;
@@ -523,7 +527,11 @@ select {
   font-size: 15px;
   background: transparent;
   color: var(--text);
-  outline: none;
+}
+
+.command-palette input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .command-list {

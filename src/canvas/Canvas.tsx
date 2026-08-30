@@ -264,6 +264,14 @@ export function Canvas() {
     if (handle.includes("w")) x1 = world.x;
     if (handle.includes("s")) y2 = world.y;
     if (handle.includes("n")) y1 = world.y;
+    // Clamp to a minimum size — dragging a handle past the opposite edge would
+    // otherwise produce negative width/height, corrupting bounds/hit-testing
+    // for every element in the selection.
+    const MIN_SIZE = 1;
+    if (handle.includes("e")) x2 = Math.max(x2, x1 + MIN_SIZE);
+    if (handle.includes("w")) x1 = Math.min(x1, x2 - MIN_SIZE);
+    if (handle.includes("s")) y2 = Math.max(y2, y1 + MIN_SIZE);
+    if (handle.includes("n")) y1 = Math.min(y1, y2 - MIN_SIZE);
     const newW = x2 - x1;
     const newH = y2 - y1;
     const oldW = startBounds.x2 - startBounds.x1 || 1;

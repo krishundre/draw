@@ -30,7 +30,13 @@ export function Toolbar() {
         setTool("selection");
         commitHistory();
       };
+      img.onerror = () => {
+        alert("Could not insert that file — it doesn't look like a valid image.");
+      };
       img.src = dataURL;
+    };
+    reader.onerror = () => {
+      alert("Could not read that file. Please try again.");
     };
     reader.readAsDataURL(file);
     e.target.value = "";
