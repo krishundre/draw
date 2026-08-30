@@ -20,4 +20,4 @@ Your message is emailed directly to the person maintaining DrawBoard (chef@desig
 
 ## Prefer GitHub instead?
 
-If you're comfortable with GitHub, you're welcome to open an issue on the [repository](https://github.com/designpav/draw) instead — that's public and lets other people see and comment on it too. Use whichever feels right for what you're reporting.
+If you're comfortable with GitHub, you're welcome to open an issue on the [repository](https://github.com/krishundre/draw) instead — that's public and lets other people see and comment on it too. Use whichever feels right for what you're reporting.

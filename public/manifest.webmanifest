@@ -1,12 +1,15 @@
 {
-  "name": "DrawBoard",
+  "name": "DrawBoard — Free Open-Source Whiteboard",
   "short_name": "DrawBoard",
-  "description": "A personal, self-hosted whiteboard for sketching diagrams.",
+  "description": "A free, open-source, browser-based whiteboard for sketching diagrams and wireframes in a hand-drawn style. No login required.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#121212",
   "icons": [
-    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/favicon-32.png", "sizes": "32x32", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }

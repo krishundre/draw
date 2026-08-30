@@ -7,7 +7,8 @@
     "dev": "vite",
     "server": "node server/index.js",
     "dev:all": "concurrently -n web,server -c blue,green \"npm:dev\" \"npm:server\"",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && npm run build:seo",
+    "build:seo": "tsx scripts/seo-build.ts",
     "preview": "vite preview"
   },
   "devDependencies": {
@@ -17,6 +18,7 @@
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^6.1.1",
     "concurrently": "^10.0.5",
+    "tsx": "^4.23.13",
     "typescript": "~6.0.2",
     "vite": "^8.2.2",
     "ws": "^8.21.3"

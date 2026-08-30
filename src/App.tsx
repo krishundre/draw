@@ -12,6 +12,10 @@ import { HelpDialog } from "./components/HelpDialog";
 import { useStore } from "./state/store";
 import { KEY_TO_TOOL } from "./tools/toolDefs";
 import { newId, randomSeed } from "./utils/id";
+import { useHead } from "./seo/useHead";
+import { getPageMeta } from "./seo/pages";
+import { JsonLd } from "./seo/JsonLd";
+import { softwareApplicationLd, organizationLd } from "./seo/structuredData";
 
 export default function App() {
   const store = useStore();
@@ -20,6 +24,8 @@ export default function App() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+
+  useHead(getPageMeta("/"));
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", appState.theme);
@@ -119,6 +125,33 @@ export default function App() {
         setContextMenu({ x: e.clientX, y: e.clientY });
       }}
     >
+      <JsonLd id="software-application" data={softwareApplicationLd} />
+      <JsonLd id="organization" data={organizationLd} />
+      {/* Real, crawlable description of the app — visually hidden (not display:none)
+          so it doesn't clutter the drawing UI, but screen readers and search/AI
+          crawlers that read the DOM still get accurate, non-canvas text content. */}
+      <header className="sr-only">
+        <h1>DrawBoard — a free, open-source, hand-drawn-style whiteboard</h1>
+        <p>
+          DrawBoard is a free and open-source whiteboard for sketching diagrams, wireframes, and notes with a hand-drawn look. It runs entirely
+          in your browser — there is no account, no login, and nothing to install. Your drawings save automatically to your own device.
+        </p>
+        <p>Key features:</p>
+        <ul>
+          <li>Drawing tools: selection, rectangle, diamond, ellipse, arrow, line, freehand draw, text, image, eraser, and frame</li>
+          <li>Full styling: stroke and fill colors, fill styles, stroke width, sloppiness, edges, opacity, and fonts</li>
+          <li>Undo/redo, grouping, layering, and a reusable shape library</li>
+          <li>Export to PNG, SVG, or a native JSON file; import existing files</li>
+          <li>Free, no login required, and open source under the MIT License</li>
+        </ul>
+        <p>
+          See the <a href="/docs">full user manual</a> or the{" "}
+          <a href="https://github.com/krishundre/draw" target="_blank" rel="noreferrer">
+            source code on GitHub
+          </a>
+          .
+        </p>
+      </header>
       <Canvas />
       <div className="top-left-bar">
         <MenuBar />

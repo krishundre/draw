@@ -27,7 +27,7 @@ An open-source, self-hostable whiteboard inspired by [Excalidraw](https://excali
 ## Quick start
 
 ```bash
-git clone https://github.com/designpav/draw.git   # or wherever you forked it
+git clone https://github.com/krishundre/draw.git   # or wherever you forked it
 cd draw
 npm install
 npm run dev

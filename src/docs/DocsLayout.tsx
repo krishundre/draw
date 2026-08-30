@@ -3,6 +3,10 @@ import { Link, useParams, Navigate } from "react-router-dom";
 import { marked } from "marked";
 import { DOCS_NAV, DEFAULT_DOC_SLUG } from "./nav";
 import { getDocMarkdown } from "./content";
+import { useHead } from "../seo/useHead";
+import { getPageMeta } from "../seo/pages";
+import { JsonLd } from "../seo/JsonLd";
+import { faqPageLd, breadcrumbLd } from "../seo/structuredData";
 
 export function DocsLayout() {
   const { slug = DEFAULT_DOC_SLUG } = useParams();
@@ -15,9 +19,7 @@ export function DocsLayout() {
     window.scrollTo({ top: 0 });
   }, [slug]);
 
-  useEffect(() => {
-    document.title = markdown ? `${DOCS_NAV.find((p) => p.slug === slug)?.title ?? "Docs"} — DrawBoard Docs` : "DrawBoard Docs";
-  }, [slug, markdown]);
+  useHead(getPageMeta(`/docs/${slug}`));
 
   const html = useMemo(() => (markdown ? marked.parse(markdown, { async: false }) : ""), [markdown]);
 
@@ -27,6 +29,8 @@ export function DocsLayout() {
 
   return (
     <div className="docs-root">
+      <JsonLd id="breadcrumb" data={breadcrumbLd(slug)} />
+      {slug === "faq" && <JsonLd id="faq-page" data={faqPageLd(markdown)} />}
       <header className="docs-header">
         <button className="docs-menu-toggle" onClick={() => setSidebarOpen((v) => !v)} aria-label="Toggle navigation">
           ☰
@@ -45,6 +49,9 @@ export function DocsLayout() {
               {page.title}
             </Link>
           ))}
+          <a className="docs-nav-link" href="https://github.com/krishundre/draw" target="_blank" rel="noreferrer">
+            GitHub repo ↗
+          </a>
         </nav>
         <main className="docs-content" dangerouslySetInnerHTML={{ __html: html }} />
       </div>

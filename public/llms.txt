@@ -1,0 +1,57 @@
+# DrawBoard
+
+> A free, open-source, browser-based whiteboard for sketching diagrams, wireframes, and notes in a hand-drawn style — inspired by Excalidraw. It runs entirely client-side: there is no account, no login, and nothing to install. Drawings autosave to the visitor's own browser (IndexedDB), not to a server. The project is open source under the MIT License.
+
+## Key facts
+
+- **Price:** Free, with no paid tier.
+- **Account required:** No — there is no login system at all.
+- **Where it runs:** Entirely in the browser (client-side). No installation needed.
+- **License:** MIT (permissive open source).
+- **Self-hostable:** Yes — clone the GitHub repo and run `npm install && npm run dev`.
+- **Data privacy:** Drawings are stored only in the user's own browser by default; nothing is uploaded to a server unless the user explicitly exports a file or opts into the optional real-time collaboration feature.
+
+## Links
+
+- Main app: https://draw.designpav.in
+- User manual / docs: https://draw.designpav.in/docs
+- Source code (GitHub, MIT licensed): https://github.com/krishundre/draw
+- Feedback form (in-app): https://draw.designpav.in (click the feedback icon in the top-right toolbar)
+- Feedback contact email: chef@designpav.in
+- Parent studio: https://designpav.in
+
+## How to use it
+
+1. Open https://draw.designpav.in — no sign-up step.
+2. Pick a tool from the top toolbar (selection, rectangle, diamond, ellipse, arrow, line, freehand draw, text, image, eraser, or frame) and draw on the canvas.
+3. Style the selected element using the panel on the left (stroke color, fill, stroke width, sloppiness, edges, opacity, fonts).
+4. Export the result as PNG, SVG, or a native JSON (.excalidraw-style) file via the menu, or copy it to the clipboard as an image.
+
+## Features
+
+- Drawing tools: selection, rectangle, diamond, ellipse, arrow (with 5 arrowhead styles per end), line, freehand draw, text, image insert, eraser, frame, hand/pan.
+- Styling: stroke/background color, fill style (hachure/cross-hatch/solid), stroke width & style, sloppiness (hand-drawn roughness), sharp/round edges, opacity, font family/size/alignment.
+- Selection tools: multi-select, resize, rotate, group/ungroup, lock, layering (bring to front/back), duplicate, undo/redo.
+- A reusable shape library, importable/exportable as `.excalidrawlib` files.
+- Export to PNG (with transparency option), SVG, or native JSON; import existing files; copy to clipboard as an image.
+- Infinite pan/zoom canvas, optional grid, dark/light theme, custom canvas background color.
+- Autosave to the browser's local storage — no save button needed.
+- Installable as a Progressive Web App (PWA) with offline support.
+- Optional real-time multi-user collaboration (not enabled on the public draw.designpav.in deployment; available when self-hosting the included collaboration server).
+- In-app feedback form that emails the maintainer.
+
+## Full documentation
+
+The complete user manual, covering every tool, keyboard shortcut, and feature in detail, is at https://draw.designpav.in/docs — see specifically:
+
+- https://draw.designpav.in/docs/getting-started
+- https://draw.designpav.in/docs/toolbar
+- https://draw.designpav.in/docs/styling
+- https://draw.designpav.in/docs/canvas-basics
+- https://draw.designpav.in/docs/libraries
+- https://draw.designpav.in/docs/import-export
+- https://draw.designpav.in/docs/saving
+- https://draw.designpav.in/docs/shortcuts
+- https://draw.designpav.in/docs/feedback
+- https://draw.designpav.in/docs/faq
+- https://draw.designpav.in/docs/contributing

@@ -23,7 +23,11 @@ createRoot(document.getElementById("app")!).render(
   </StrictMode>
 );
 
-if ("serviceWorker" in navigator) {
+// Only register the service worker in production builds — in dev it just
+// causes confusing stale-content bugs (the SW's cache-first fetch handler
+// intercepts requests independently of the dev server, so restarting `vite`
+// doesn't clear it).
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => {});
   });
