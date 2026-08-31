@@ -9,6 +9,7 @@ export interface ToolDef {
 
 export const TOOLS: ToolDef[] = [
   { type: "selection", label: "Selection", key: "1", icon: "cursor" },
+  { type: "lasso", label: "Lasso", key: "Q", icon: "lasso" },
   { type: "hand", label: "Hand (pan)", key: "H", icon: "hand" },
   { type: "rectangle", label: "Rectangle", key: "2", icon: "rect" },
   { type: "diamond", label: "Diamond", key: "3", icon: "diamond" },
@@ -25,6 +26,7 @@ export const TOOLS: ToolDef[] = [
 export const KEY_TO_TOOL: Record<string, ToolType> = {
   "1": "selection",
   v: "selection",
+  q: "lasso",
   "2": "rectangle",
   r: "rectangle",
   "3": "diamond",

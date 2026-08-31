@@ -1,4 +1,5 @@
 import { renderScene } from "../canvas/render";
+import { renderSceneToSVGString } from "../canvas/renderSVG";
 import { getCombinedBounds } from "../canvas/geometry";
 import type { WhiteboardElement } from "../types";
 
@@ -67,13 +68,7 @@ export async function copyPNGToClipboard(elements: WhiteboardElement[], opts: { 
 }
 
 export function exportToSVG(elements: WhiteboardElement[], opts: { background: string; transparent: boolean }): string {
-  const canvas = renderToCanvas(elements, { ...opts, scale: 1 });
-  const dataURL = canvas.toDataURL("image/png");
-  const bounds = getCombinedBounds(elements);
-  const pad = 20;
-  const width = bounds.x2 - bounds.x1 + pad * 2;
-  const height = bounds.y2 - bounds.y1 + pad * 2;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><image href="${dataURL}" width="${width}" height="${height}"/></svg>`;
+  return renderSceneToSVGString(elements, opts);
 }
 
 export function parseImportedFile(text: string): ExcalidrawFile {

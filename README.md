@@ -11,12 +11,19 @@ An open-source, self-hostable whiteboard inspired by [Excalidraw](https://excali
 
 ## Features
 
-- **12 tools**: selection, rectangle, diamond, ellipse, arrow (5 arrowhead styles per end), line, freehand draw, text, image insert, eraser, frame, hand/pan — with the same keyboard shortcuts as Excalidraw.
+- **13 tools**: selection, lasso (freeform selection), rectangle, diamond, ellipse, arrow (5 arrowhead styles per end, with arrow-to-shape binding), line, freehand draw, text, image insert (with in-editor cropping), eraser, frame, hand/pan — with the same keyboard shortcuts as Excalidraw.
 - **Full styling**: stroke & background color (presets + custom picker), fill style (hachure / cross-hatch / solid), stroke width & style, sloppiness (architect / artist / cartoonist), sharp or round edges, opacity, font family/size/alignment.
-- **Selection & transform**: multi-select, 8-handle resize, rotate, group/ungroup, lock, layering (front/back/forward/backward), duplicate, arrow-key nudging.
+- **Selection & transform**: multi-select, 8-handle resize, rotate, group/ungroup, lock, layering (front/back/forward/backward), duplicate, arrow-key nudging, align (left/right/center/top/bottom/middle) and distribute (horizontal/vertical).
+- **Arrow-to-shape binding**: arrows started or ended on a rectangle/diamond/ellipse snap to its edge and stay attached as the shape moves, resizes, gets nudged, aligned, or distributed.
+- **Multi-point lines & arrows**: click a line/arrow tool once to start a click-chain (click to place each point, click near the last point or press Enter to finish, Escape to cancel); double-click an existing line/arrow to edit its points — drag a point, click a segment to insert one, Alt+click a point to remove it.
+- **Bound text**: double-click a shape to add a text label that wraps to the shape's width and keeps the shape centered as it grows or the shape is resized.
+- **Editable stats panel**: X/Y/W/H are live-editable number inputs, not just a read-out.
+- **Element hyperlinks**: attach a URL to any element from the right-click menu; Ctrl/Cmd-click to open it.
+- **Copy/paste** to the real OS clipboard (`Ctrl/Cmd+C`/`V`), independent of Duplicate.
 - **Undo/redo** with a full history stack.
-- **Shape library**: built-in shapes plus your own, exportable/importable as `.excalidrawlib`.
-- **Import/export**: native JSON, PNG (1x/2x, transparent background), SVG, copy-to-clipboard as PNG.
+- **Shape library**: a docked sidebar with tabs for built-in shapes, your own saved shapes, and imported `.excalidrawlib` files.
+- **Scene search** (`Ctrl/Cmd+Shift+F`): find elements by text content or type, jump straight to one.
+- **Import/export**: native JSON, PNG (1x/2x, transparent background), true vector SVG, copy-to-clipboard as PNG — PNG/SVG/clipboard exports can be scoped to just the current selection.
 - **Infinite canvas**: pan, zoom, grid toggle, dark/light theme, custom canvas background.
 - **Autosave**: everything persists to your browser's IndexedDB automatically — close the tab and come back later.
 - **Command palette** (`Ctrl/Cmd+K`), right-click context menu, stats panel, in-app help dialog (`Shift+/`).
@@ -68,12 +75,13 @@ The server doesn't persist anything itself — each browser keeps its own full c
 
 ## Known limitations
 
-- SVG export currently rasterizes to PNG and wraps it in an `<svg>` — not true scalable vector output yet.
-- Arrows/lines are 2-point drag-only (no multi-point click-chain editing).
-- Arrow-to-shape binding (arrows that stay attached as you move a shape) isn't implemented yet.
-- No Mermaid-to-diagram converter or laser pointer.
+- No Mermaid-to-diagram converter, laser pointer, or lasso for anything other than element selection (no freeform draw-a-mask tool).
 - Frames are visual/organizational only — moving a frame doesn't drag its contents yet.
+- Image cropping uses a simplified model: dragging an edge/corner trims the displayed box directly (rather than showing the full source image faded behind a movable crop window), and dragging inside the box pans which part of the source shows through at the box's current size. Real and useful, just not a full Photoshop-style windowed crop UI.
+- The DrawBoard JSON export format (`type: "drawboard"`) is its own schema, not byte-for-byte compatible with real `.excalidraw` files, even though both are plain JSON — this is a deliberate scope decision, not a bug (see the gap analysis linked below if you're curious why).
 - The public demo runs single-user only (see above); self-host `server/` if you want live collaboration.
+
+For a detailed comparison against Excalidraw — what's implemented, what's deliberately out of scope, and why — see [`GAP-ANALYSIS.md`](GAP-ANALYSIS.md).
 
 Contributions welcome on any of these — see below.
 

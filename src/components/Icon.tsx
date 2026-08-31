@@ -73,6 +73,22 @@ function shapeFor(name: string) {
       return <path d="M16 12.5A7 7 0 1 1 7.5 4a5.5 5.5 0 0 0 8.5 8.5Z" />;
     case "menu":
       return <path d="M3 5h14M3 10h14M3 15h14" />;
+    case "lasso":
+      return (
+        <>
+          <path d="M10 3 C4 3 3 7 5 9.5 C6.5 11.3 9 10.5 9 12.5 C9 14.5 6.5 14 6 16" />
+          <circle cx="5.4" cy="16.3" r="1.1" fill="currentColor" stroke="none" />
+        </>
+      );
+    case "search":
+      return (
+        <>
+          <circle cx="8.5" cy="8.5" r="5.5" />
+          <path d="M16.5 16.5 L12.7 12.7" />
+        </>
+      );
+    case "crop":
+      return <path d="M6 2 V14 H18 M2 6 H14 V18" />;
     default:
       return <circle cx="10" cy="10" r="6" />;
   }

@@ -1,5 +1,6 @@
 export type ToolType =
   | "selection"
+  | "lasso"
   | "rectangle"
   | "diamond"
   | "ellipse"
@@ -52,6 +53,7 @@ export interface BaseElement extends ElementStyle {
   frameId: string | null;
   locked: boolean;
   zIndex: number;
+  link: string | null;
 }
 
 export interface RectangleElement extends BaseElement {
@@ -96,10 +98,17 @@ export interface TextElement extends BaseElement {
   textAlign: TextAlign;
   containerId: string | null;
 }
+export interface ImageCrop {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 export interface ImageElement extends BaseElement {
   type: "image";
   fileId: string;
   dataURL: string;
+  crop: ImageCrop | null;
 }
 
 export type WhiteboardElement =
@@ -123,6 +132,8 @@ export interface AppState {
   currentEndArrowhead: ArrowheadStyle;
   selectedIds: string[];
   editingTextId: string | null;
+  editingPointsId: string | null;
+  croppingId: string | null;
   scrollX: number;
   scrollY: number;
   zoom: number;
@@ -137,4 +148,5 @@ export interface LibraryItem {
   id: string;
   elements: WhiteboardElement[];
   name?: string;
+  source?: "custom" | "imported";
 }

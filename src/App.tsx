@@ -9,6 +9,7 @@ import { LibraryPanel } from "./components/LibraryPanel";
 import { ContextMenu } from "./components/ContextMenu";
 import { CommandPalette } from "./components/CommandPalette";
 import { HelpDialog } from "./components/HelpDialog";
+import { SceneSearch } from "./components/SceneSearch";
 import { useStore } from "./state/store";
 import { KEY_TO_TOOL } from "./tools/toolDefs";
 import { newId, randomSeed } from "./utils/id";
@@ -18,6 +19,7 @@ import { JsonLd } from "./seo/JsonLd";
 import { softwareApplicationLd, organizationLd } from "./seo/structuredData";
 import { TutorialOverlay } from "./tutorial/TutorialOverlay";
 import { hasSeenTutorial, persistenceReady } from "./collab/doc";
+import { copyElementsToClipboard, readElementsFromClipboard } from "./utils/clipboard";
 
 export default function App() {
   const store = useStore();
@@ -25,6 +27,7 @@ export default function App() {
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   useHead(getPageMeta("/"));
@@ -60,6 +63,13 @@ export default function App() {
         setPaletteOpen(true);
         return;
       }
+      // Shift+Ctrl/Cmd+F rather than plain Ctrl+F, which browsers reserve for
+      // their own page-find — overriding that is a common source of complaints.
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        setSearchOpen(true);
+        return;
+      }
       if (typing) return;
 
       if (e.key === "?" || (e.shiftKey && e.key === "/")) {
@@ -69,6 +79,7 @@ export default function App() {
       }
       if (e.key === "Escape") {
         setPaletteOpen(false);
+        setSearchOpen(false);
         setHelpOpen(false);
         setLibraryOpen(false);
         setContextMenu(null);
@@ -107,6 +118,32 @@ export default function App() {
         else store.group(appState.selectedIds);
         return;
       }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
+        if (!appState.selectedIds.length) return;
+        e.preventDefault();
+        const selected = store.elements.filter((el) => appState.selectedIds.includes(el.id));
+        copyElementsToClipboard(selected);
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") {
+        e.preventDefault();
+        readElementsFromClipboard().then((copied) => {
+          if (!copied || !copied.length) return;
+          const { elements: current } = useStore.getState();
+          const clones = copied.map((el, i) => ({
+            ...el,
+            id: newId(),
+            seed: randomSeed(),
+            x: el.x + 20,
+            y: el.y + 20,
+            zIndex: current.length + i,
+          }));
+          store.addElements(clones as typeof store.elements);
+          store.setSelectedIds(clones.map((c) => c.id));
+          store.commitHistory();
+        });
+        return;
+      }
       if (e.key === "Delete" || e.key === "Backspace") {
         if (appState.selectedIds.length) {
           e.preventDefault();
@@ -123,6 +160,8 @@ export default function App() {
           const el = store.elements.find((x) => x.id === id);
           if (el) store.updateElement(id, { x: el.x + dx, y: el.y + dy });
         });
+        store.syncBoundArrows(appState.selectedIds);
+        store.syncBoundText(appState.selectedIds);
         return;
       }
 
@@ -178,9 +217,10 @@ export default function App() {
       </div>
       <StylePanel />
       <BottomBar />
-      <TopRightBar onOpenLibrary={() => setLibraryOpen((v) => !v)} onOpenHelp={() => setHelpOpen(true)} />
+      <TopRightBar onOpenLibrary={() => setLibraryOpen((v) => !v)} onOpenHelp={() => setHelpOpen(true)} onOpenSearch={() => setSearchOpen(true)} />
       {libraryOpen && <LibraryPanel onClose={() => setLibraryOpen(false)} />}
-      {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} />}
+      {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} onOpenSearch={() => setSearchOpen(true)} />}
+      {searchOpen && <SceneSearch onClose={() => setSearchOpen(false)} />}
       {helpOpen && <HelpDialog onClose={() => setHelpOpen(false)} />}
       {contextMenu && <ContextMenu x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)} />}
       {appState.tutorialOpen && <TutorialOverlay />}

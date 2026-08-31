@@ -30,6 +30,7 @@ function base(appState: AppState, type: ToolType, x: number, y: number, zIndex: 
     frameId: null,
     locked: false,
     zIndex,
+    link: null,
     ...appState.currentStyle,
   };
 }
@@ -85,5 +86,6 @@ export function createImageElement(appState: AppState, x: number, y: number, zIn
     height,
     fileId: newId(),
     dataURL,
+    crop: null,
   } as ImageElement;
 }

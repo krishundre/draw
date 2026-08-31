@@ -43,7 +43,13 @@ export function SelectionOverlay({
               borderRadius: isRotate ? "50%" : 2,
               background: "#fff",
               border: "1.5px solid #4dabf7",
-              pointerEvents: "auto",
+              // The actual drag is hit-tested manually in Canvas.tsx's own
+              // pointerdown handler (proximity to each handle's screen
+              // position) — these divs are purely visual. Leaving this at
+              // "auto" made them swallow clicks that land dead-center on a
+              // handle, since as siblings of <canvas> (not descendants) a
+              // pointerdown here never reaches the canvas's own listener.
+              pointerEvents: "none",
               cursor: isRotate ? "grab" : `${key}-resize`,
             }}
           />

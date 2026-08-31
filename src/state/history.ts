@@ -74,6 +74,8 @@ export function defaultAppState(): AppState {
     currentEndArrowhead: "arrow",
     selectedIds: [],
     editingTextId: null,
+    editingPointsId: null,
+    croppingId: null,
     scrollX: 0,
     scrollY: 0,
     zoom: 1,

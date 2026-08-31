@@ -89,3 +89,32 @@ export function getResizeHandles(bounds: { x1: number; y1: number; x2: number; y
 export function snapToGrid(v: number, gridSize = 20): number {
   return Math.round(v / gridSize) * gridSize;
 }
+
+// Standard ray-casting point-in-polygon test.
+export function isPointInPolygon(px: number, py: number, polygon: Point[]): boolean {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].x;
+    const yi = polygon[i].y;
+    const xj = polygon[j].x;
+    const yj = polygon[j].y;
+    const intersects = yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi;
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
+// An element counts as lasso-selected when all four corners of its bounding
+// box fall inside the lasso polygon — same "fully contained" rule the
+// rectangular marquee (isElementInRect) already uses, just against a
+// freeform outline instead of an axis-aligned box.
+export function isElementInPolygon(el: WhiteboardElement, polygon: Point[]): boolean {
+  if (polygon.length < 3) return false;
+  const { x1, y1, x2, y2 } = getElementBounds(el);
+  return (
+    isPointInPolygon(x1, y1, polygon) &&
+    isPointInPolygon(x2, y1, polygon) &&
+    isPointInPolygon(x2, y2, polygon) &&
+    isPointInPolygon(x1, y2, polygon)
+  );
+}

@@ -20,15 +20,20 @@ function saveCustom(items: LibraryItem[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 }
 
+type Tab = "builtin" | "custom" | "imported";
+
 export function LibraryPanel({ onClose }: { onClose: () => void }) {
   const { elements, appState, addElements, setSelectedIds, commitHistory } = useStore();
   const [custom, setCustom] = useState<LibraryItem[]>(loadCustom());
+  const [tab, setTab] = useState<Tab>("builtin");
   const fileRef = useRef<HTMLInputElement>(null);
   const { ref: glassRef, background } = useAdaptiveContrast<HTMLDivElement>();
 
   useEffect(() => saveCustom(custom), [custom]);
 
   const selected = elements.filter((e) => appState.selectedIds.includes(e.id));
+  const myItems = custom.filter((i) => i.source !== "imported");
+  const importedItems = custom.filter((i) => i.source === "imported");
 
   function insert(item: LibraryItem) {
     const idMap = new Map<string, string>();
@@ -49,7 +54,8 @@ export function LibraryPanel({ onClose }: { onClose: () => void }) {
   function addSelectionToLibrary() {
     if (!selected.length) return;
     const name = prompt("Name for this library item:", "My shape") || "My shape";
-    setCustom((c) => [...c, { id: newId(), name, elements: JSON.parse(JSON.stringify(selected)) }]);
+    setCustom((c) => [...c, { id: newId(), name, source: "custom", elements: JSON.parse(JSON.stringify(selected)) }]);
+    setTab("custom");
   }
 
   function removeCustom(id: string) {
@@ -66,13 +72,34 @@ export function LibraryPanel({ onClose }: { onClose: () => void }) {
     file.text().then((text) => {
       try {
         const data = JSON.parse(text);
-        const items: LibraryItem[] = data.library ?? data;
+        const items: LibraryItem[] = (data.library ?? data).map((i: LibraryItem) => ({ ...i, id: i.id || newId(), source: "imported" as const }));
         setCustom((c) => [...c, ...items]);
+        setTab("imported");
       } catch {
         alert("Invalid .excalidrawlib file");
       }
     });
     e.target.value = "";
+  }
+
+  function renderGrid(items: LibraryItem[], removable: boolean) {
+    if (!items.length) return <div className="library-empty">Nothing here yet.</div>;
+    return (
+      <div className="library-grid">
+        {items.map((item) => (
+          <div key={item.id} className="library-item-wrap">
+            <button className="library-item" onClick={() => insert(item)} title={item.name}>
+              {item.name || "Untitled"}
+            </button>
+            {removable && (
+              <button className="library-item-remove" onClick={() => removeCustom(item.id)} title="Remove">
+                ✕
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    );
   }
 
   return (
@@ -91,31 +118,30 @@ export function LibraryPanel({ onClose }: { onClose: () => void }) {
         </button>
         <input ref={fileRef} type="file" accept=".excalidrawlib,.json" style={{ display: "none" }} onChange={importLibrary} />
       </div>
-      <div className="library-section-title">Shapes</div>
-      <div className="library-grid">
-        {BUILTIN_LIBRARY.map((item) => (
-          <button key={item.id} className="library-item" onClick={() => insert(item)} title={item.name}>
-            {item.name}
-          </button>
-        ))}
+      <div className="library-tabs">
+        <button className={tab === "builtin" ? "active" : ""} onClick={() => setTab("builtin")}>
+          Built-in
+        </button>
+        <button className={tab === "custom" ? "active" : ""} onClick={() => setTab("custom")}>
+          My library {myItems.length > 0 && `(${myItems.length})`}
+        </button>
+        <button className={tab === "imported" ? "active" : ""} onClick={() => setTab("imported")}>
+          Imported {importedItems.length > 0 && `(${importedItems.length})`}
+        </button>
       </div>
-      {custom.length > 0 && (
-        <>
-          <div className="library-section-title">My library</div>
+      <div className="library-tab-content">
+        {tab === "builtin" && (
           <div className="library-grid">
-            {custom.map((item) => (
-              <div key={item.id} className="library-item-wrap">
-                <button className="library-item" onClick={() => insert(item)} title={item.name}>
-                  {item.name}
-                </button>
-                <button className="library-item-remove" onClick={() => removeCustom(item.id)}>
-                  ✕
-                </button>
-              </div>
+            {BUILTIN_LIBRARY.map((item) => (
+              <button key={item.id} className="library-item" onClick={() => insert(item)} title={item.name}>
+                {item.name}
+              </button>
             ))}
           </div>
-        </>
-      )}
+        )}
+        {tab === "custom" && renderGrid(myItems, true)}
+        {tab === "imported" && renderGrid(importedItems, true)}
+      </div>
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "../state/store";
+import { copyElementsToClipboard, readElementsFromClipboard } from "../utils/clipboard";
+import { newId, randomSeed } from "../utils/id";
 
 interface Command {
   id: string;
@@ -8,7 +10,7 @@ interface Command {
   run: () => void;
 }
 
-export function CommandPalette({ onClose }: { onClose: () => void }) {
+export function CommandPalette({ onClose, onOpenSearch }: { onClose: () => void; onOpenSearch: () => void }) {
   const store = useStore();
   const [query, setQuery] = useState("");
 
@@ -33,9 +35,42 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
       { id: "ungroup", label: "Ungroup selection", shortcut: "Ctrl+Shift+G", run: () => store.ungroup(store.appState.selectedIds) },
       { id: "front", label: "Bring to front", run: () => store.bringToFront(store.appState.selectedIds) },
       { id: "back", label: "Send to back", run: () => store.sendToBack(store.appState.selectedIds) },
+      { id: "align-left", label: "Align left", run: () => store.alignElements(store.appState.selectedIds, "left") },
+      { id: "align-right", label: "Align right", run: () => store.alignElements(store.appState.selectedIds, "right") },
+      { id: "align-center-h", label: "Align center (horizontal)", run: () => store.alignElements(store.appState.selectedIds, "centerH") },
+      { id: "align-top", label: "Align top", run: () => store.alignElements(store.appState.selectedIds, "top") },
+      { id: "align-bottom", label: "Align bottom", run: () => store.alignElements(store.appState.selectedIds, "bottom") },
+      { id: "align-center-v", label: "Align center (vertical)", run: () => store.alignElements(store.appState.selectedIds, "centerV") },
+      { id: "distribute-h", label: "Distribute horizontally", run: () => store.distributeElements(store.appState.selectedIds, "horizontal") },
+      { id: "distribute-v", label: "Distribute vertically", run: () => store.distributeElements(store.appState.selectedIds, "vertical") },
+      {
+        id: "copy",
+        label: "Copy",
+        shortcut: "Ctrl+C",
+        run: () => {
+          const selected = store.elements.filter((el) => store.appState.selectedIds.includes(el.id));
+          copyElementsToClipboard(selected);
+        },
+      },
+      {
+        id: "paste",
+        label: "Paste",
+        shortcut: "Ctrl+V",
+        run: () => {
+          readElementsFromClipboard().then((copied) => {
+            if (!copied || !copied.length) return;
+            const current = store.elements;
+            const clones = copied.map((el, i) => ({ ...el, id: newId(), seed: randomSeed(), x: el.x + 20, y: el.y + 20, zIndex: current.length + i }));
+            store.addElements(clones as typeof store.elements);
+            store.setSelectedIds(clones.map((c) => c.id));
+            store.commitHistory();
+          });
+        },
+      },
+      { id: "search-elements", label: "Search elements", shortcut: "Ctrl+Shift+F", run: onOpenSearch },
       { id: "replay-tutorial", label: "Replay tutorial", run: () => store.setAppState({ tutorialOpen: true }) },
     ],
-    [store]
+    [store, onOpenSearch]
   );
 
   const filtered = commands.filter((c) => c.label.toLowerCase().includes(query.toLowerCase()));

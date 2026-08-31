@@ -536,14 +536,33 @@ select {
   color: var(--text-muted);
 }
 
-/* Library panel */
+.stats-input-pair {
+  display: flex;
+  gap: 4px;
+}
+
+.stats-input {
+  width: 48px;
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  border: 1px solid var(--panel-border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Library panel — a docked, full-height sidebar (tabs switch between
+   built-in/custom/imported sections) rather than the old short floating box,
+   so browsing a large library doesn't need its own separate scroll-within-
+   scroll for every section stacked at once. */
 .library-panel {
   position: absolute;
   top: 60px;
   right: 12px;
-  width: 260px;
-  max-height: 70vh;
-  overflow-y: auto;
+  bottom: 12px;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
   background: var(--glass-bg);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
   backdrop-filter: blur(var(--glass-blur)) saturate(180%);
@@ -552,6 +571,42 @@ select {
   box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
   padding: 10px;
   z-index: 6;
+}
+
+.library-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--panel-border);
+  margin-bottom: 8px;
+}
+
+.library-tabs button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.6;
+  font-size: 12px;
+  padding: 6px 4px;
+  border-bottom: 2px solid transparent;
+}
+
+.library-tabs button.active {
+  opacity: 1;
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.library-tab-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.library-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 12px 4px;
+  text-align: center;
 }
 
 .library-panel[data-bg="light"] {

@@ -2,6 +2,7 @@ import { useStore } from "../state/store";
 
 const SHORTCUTS: [string, string][] = [
   ["V / 1", "Selection tool"],
+  ["Q", "Lasso (freeform) selection"],
   ["R / 2", "Rectangle"],
   ["D / 3", "Diamond"],
   ["O / 4", "Ellipse"],
@@ -13,17 +14,23 @@ const SHORTCUTS: [string, string][] = [
   ["E / 0", "Eraser"],
   ["F", "Frame"],
   ["H / Space-drag", "Hand (pan)"],
+  ["Click, click, … (line/arrow tool)", "Multi-point line/arrow — click to place each point"],
+  ["Enter / Esc (while placing points)", "Finish / cancel the multi-point line or arrow"],
+  ["Double-click a line/arrow", "Edit its points — drag to move, click a segment to add, Alt+click to remove"],
+  ["Double-click a shape", "Add/edit a text label bound to it"],
   ["Ctrl/Cmd + Scroll", "Zoom"],
   ["Ctrl/Cmd + Z", "Undo"],
   ["Ctrl/Cmd + Shift + Z", "Redo"],
+  ["Ctrl/Cmd + C / V", "Copy / paste"],
   ["Ctrl/Cmd + D", "Duplicate"],
   ["Ctrl/Cmd + G", "Group"],
   ["Ctrl/Cmd + Shift + G", "Ungroup"],
   ["Ctrl/Cmd + A", "Select all"],
   ["Delete / Backspace", "Delete selection"],
   ["Ctrl/Cmd + K", "Command palette"],
+  ["Ctrl/Cmd + Shift + F", "Search elements"],
   ["Shift + /", "This help dialog"],
-  ["Right-click", "Context menu"],
+  ["Right-click", "Context menu (align, distribute, link, crop, etc.)"],
 ];
 
 export function HelpDialog({ onClose }: { onClose: () => void }) {

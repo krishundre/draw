@@ -15,7 +15,15 @@ const COLORS = ["#e03131", "#2f9e44", "#1971c2", "#f08c00", "#9c36b5"];
 const COLLAB_ENABLED = Boolean(import.meta.env.VITE_COLLAB_WS_URL);
 const DOCS_URL = "/docs";
 
-export function TopRightBar({ onOpenLibrary, onOpenHelp }: { onOpenLibrary: () => void; onOpenHelp: () => void }) {
+export function TopRightBar({
+  onOpenLibrary,
+  onOpenHelp,
+  onOpenSearch,
+}: {
+  onOpenLibrary: () => void;
+  onOpenHelp: () => void;
+  onOpenSearch: () => void;
+}) {
   const { appState, setAppState } = useStore();
   const [shareOpen, setShareOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
@@ -52,6 +60,9 @@ export function TopRightBar({ onOpenLibrary, onOpenHelp }: { onOpenLibrary: () =
       </button>
       <button className="tool-btn" title="Stats" onClick={() => setStatsOpen((v) => !v)} data-tutorial="stats">
         <Icon name="menu" />
+      </button>
+      <button className="tool-btn" title="Search elements (Ctrl+Shift+F)" onClick={onOpenSearch}>
+        <Icon name="search" />
       </button>
       <button className="tool-btn" title="Toggle theme" onClick={toggleTheme}>
         <Icon name={appState.theme === "light" ? "moon" : "sun"} />

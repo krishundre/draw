@@ -20,6 +20,7 @@ function rect(x: number, y: number, w: number, h: number, extra: Partial<Whitebo
     frameId: null,
     locked: false,
     zIndex: 0,
+    link: null,
     ...style,
     ...extra,
   } as WhiteboardElement;

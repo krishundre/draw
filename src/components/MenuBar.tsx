@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useStore } from "../state/store";
 import { Icon } from "./Icon";
 import { downloadFile, exportToJSON, exportToPNG, exportToSVG, copyPNGToClipboard, parseImportedFile } from "../utils/export";
@@ -6,10 +6,17 @@ import { useAdaptiveContrast } from "../theme/useAdaptiveContrast";
 
 export function MenuBar() {
   const [open, setOpen] = useState(false);
+  const [selectionOnly, setSelectionOnly] = useState(false);
   const { elements, appState, setAllElements, setAppState } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const wrap = useAdaptiveContrast<HTMLDivElement>();
   const menu = useAdaptiveContrast<HTMLDivElement>(open);
+
+  const hasSelection = appState.selectedIds.length > 0;
+  const exportElements = useMemo(
+    () => (selectionOnly && hasSelection ? elements.filter((el) => appState.selectedIds.includes(el.id)) : elements),
+    [selectionOnly, hasSelection, elements, appState.selectedIds]
+  );
 
   function openImport() {
     fileInputRef.current?.click();
@@ -32,13 +39,13 @@ export function MenuBar() {
   }
 
   async function handleExportPNG(transparent: boolean, scale: number) {
-    const blob = await exportToPNG(elements, { background: appState.canvasBackground, scale, transparent });
+    const blob = await exportToPNG(exportElements, { background: appState.canvasBackground, scale, transparent });
     downloadFile(blob, "drawing.png");
     setOpen(false);
   }
 
   function handleExportSVG() {
-    const svg = exportToSVG(elements, { background: appState.canvasBackground, transparent: false });
+    const svg = exportToSVG(exportElements, { background: appState.canvasBackground, transparent: false });
     downloadFile(new Blob([svg], { type: "image/svg+xml" }), "drawing.svg");
     setOpen(false);
   }
@@ -49,7 +56,7 @@ export function MenuBar() {
   }
 
   async function handleCopyPNG() {
-    await copyPNGToClipboard(elements, { background: appState.canvasBackground, scale: 2, transparent: true });
+    await copyPNGToClipboard(exportElements, { background: appState.canvasBackground, scale: 2, transparent: true });
     setOpen(false);
   }
 
@@ -70,6 +77,15 @@ export function MenuBar() {
           <button onClick={openImport}>Open .excalidraw file…</button>
           <button onClick={handleExportJSON}>Save as .excalidraw (JSON)</button>
           <div className="dropdown-sep" />
+          <label className="dropdown-row">
+            Export selection only
+            <input
+              type="checkbox"
+              checked={selectionOnly}
+              disabled={!hasSelection}
+              onChange={(e) => setSelectionOnly(e.target.checked)}
+            />
+          </label>
           <button onClick={() => handleExportPNG(false, 1)}>Export as PNG (1x)</button>
           <button onClick={() => handleExportPNG(true, 2)}>Export as PNG (2x, transparent)</button>
           <button onClick={handleExportSVG}>Export as SVG</button>

@@ -14,22 +14,27 @@ import type {
   StrokeStyle,
 } from "../types";
 import { getStroke } from "perfect-freehand";
+import { fontStack, wrapTextToWidth } from "./text";
 
 const imageCache = new Map<string, HTMLImageElement>();
 
-function roughnessValue(r: Roughness): number {
+export function getCachedImage(fileId: string): HTMLImageElement | undefined {
+  return imageCache.get(fileId);
+}
+
+export function roughnessValue(r: Roughness): number {
   return r === "architect" ? 0.5 : r === "artist" ? 1.2 : 2.5;
 }
-function strokeWidthValue(w: StrokeWidth): number {
+export function strokeWidthValue(w: StrokeWidth): number {
   return w === "thin" ? 1 : w === "bold" ? 2.5 : 4;
 }
-function strokeDashArray(s: StrokeStyle): number[] | undefined {
+export function strokeDashArray(s: StrokeStyle): number[] | undefined {
   if (s === "dashed") return [8, 6];
   if (s === "dotted") return [2, 6];
   return undefined;
 }
 
-function roughOptions(el: WhiteboardElement) {
+export function roughOptions(el: WhiteboardElement) {
   return {
     stroke: el.strokeColor,
     fill: el.backgroundColor === "transparent" ? undefined : el.backgroundColor,
@@ -170,7 +175,7 @@ function drawElement(rc: RoughCanvas, ctx: CanvasRenderingContext2D, el: Whitebo
   }
 }
 
-function roundedRectPath(x: number, y: number, w: number, h: number, r: number): string {
+export function roundedRectPath(x: number, y: number, w: number, h: number, r: number): string {
   r = Math.min(r, w / 2, h / 2);
   return `M ${x + r} ${y} L ${x + w - r} ${y} Q ${x + w} ${y} ${x + w} ${y + r} L ${x + w} ${y + h - r} Q ${x + w} ${y + h} ${x + w - r} ${y + h} L ${x + r} ${y + h} Q ${x} ${y + h} ${x} ${y + h - r} L ${x} ${y + r} Q ${x} ${y} ${x + r} ${y} Z`;
 }
@@ -246,12 +251,6 @@ function drawFreehand(ctx: CanvasRenderingContext2D, d: DrawElement) {
   ctx.restore();
 }
 
-function fontStack(family: TextElement["fontFamily"]): string {
-  if (family === "hand-drawn") return '"Segoe Print", "Comic Sans MS", cursive';
-  if (family === "code") return '"Cascadia Code", Consolas, monospace';
-  return "Helvetica, Arial, sans-serif";
-}
-
 export function measureText(text: string, fontSize: number, family: TextElement["fontFamily"]) {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d")!;
@@ -269,7 +268,9 @@ function drawText(ctx: CanvasRenderingContext2D, t: TextElement) {
   ctx.textAlign = t.textAlign;
   ctx.textBaseline = "top";
   const lineHeight = t.fontSize * 1.25;
-  const lines = t.text.split("\n");
+  // Bound text (containerId set) wraps to its own width, which the store keeps
+  // in sync with the container's inner width — see layoutBoundText in text.ts.
+  const lines = t.containerId ? wrapTextToWidth(t.text, t.width, t.fontSize, t.fontFamily) : t.text.split("\n");
   const anchorX = t.textAlign === "left" ? t.x : t.textAlign === "right" ? t.x + t.width : t.x + t.width / 2;
   lines.forEach((line, i) => {
     ctx.fillText(line, anchorX, t.y + i * lineHeight);
@@ -284,7 +285,10 @@ function drawImage(ctx: CanvasRenderingContext2D, img: ImageElement) {
     image.src = img.dataURL;
     imageCache.set(img.fileId, image);
   }
-  if (image.complete) {
+  if (!image.complete) return;
+  if (img.crop) {
+    ctx.drawImage(image, img.crop.x, img.crop.y, img.crop.width, img.crop.height, img.x, img.y, img.width, img.height);
+  } else {
     ctx.drawImage(image, img.x, img.y, img.width, img.height);
   }
 }
