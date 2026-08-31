@@ -24,9 +24,15 @@ export function useAdaptiveContrast<T extends HTMLElement>(active: boolean = tru
   const elements = useStore((s) => s.elements);
   const theme = useStore((s) => s.appState.theme);
   const canvasBackground = useStore((s) => s.appState.canvasBackground);
+  // Skip while the tutorial is up — it's the exact window (first paint of a
+  // first-ever visit) where piling every panel's getImageData readback on
+  // top of the tutorial's own initial render is most likely to show up as
+  // main-thread blocking time, and the scrim/spotlight already dominate the
+  // screen so the extra precision isn't worth it yet.
+  const tutorialOpen = useStore((s) => s.appState.tutorialOpen);
 
   useEffect(() => {
-    if (!active) return;
+    if (!active || tutorialOpen) return;
 
     function sampleNow() {
       const el = ref.current;
@@ -47,7 +53,7 @@ export function useAdaptiveContrast<T extends HTMLElement>(active: boolean = tru
       unsub();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, scrollX, scrollY, zoom, elements, theme, canvasBackground]);
+  }, [active, tutorialOpen, scrollX, scrollY, zoom, elements, theme, canvasBackground]);
 
   return { ref, background: reading };
 }

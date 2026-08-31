@@ -5,56 +5,70 @@
 // is independent of the app's own light/dark theme setting.
 export type BackgroundReading = "light" | "dark";
 
-// Reads getImageData at a coarse stride rather than every pixel — this is a
-// downsample, not a full-resolution scan, which keeps a call cheap enough to
-// run on every settle event (see useAdaptiveContrast) without it becoming a
-// perf problem. A panel-sized region (a few hundred px) at 1 sample per 8th
-// pixel is a few thousand reads at most.
-const SAMPLE_STRIDE = 8;
+// The main canvas is GPU-backed (Rough.js draws to it constantly), and a
+// getImageData() call on a GPU-backed canvas forces a full GPU->CPU
+// synchronization — a real stall, and the cause of a measured Lighthouse TBT
+// regression when several panels each read from it directly. Instead, blit
+// (drawImage) just the small region we need onto a tiny *offscreen* canvas
+// created with willReadFrequently, and read from that copy — drawImage
+// between canvases is a cheap GPU-side blit, and reading a small
+// CPU-optimized surface afterward is fast, so the expensive part (the sync
+// wait) only ever applies to a few dozen pixels instead of the live canvas.
+let sampleCanvas: HTMLCanvasElement | null = null;
+let sampleCtx: CanvasRenderingContext2D | null = null;
+
+const DOWNSCALE_TO = 24; // sample region is shrunk to at most this many px per side before reading
+
+function getSampleCtx(): CanvasRenderingContext2D | null {
+  if (sampleCtx) return sampleCtx;
+  sampleCanvas = document.createElement("canvas");
+  sampleCanvas.width = DOWNSCALE_TO;
+  sampleCanvas.height = DOWNSCALE_TO;
+  sampleCtx = sampleCanvas.getContext("2d", { willReadFrequently: true });
+  return sampleCtx;
+}
 
 export function sampleBackgroundReading(canvas: HTMLCanvasElement, rect: DOMRect): BackgroundReading | null {
   if (rect.width <= 0 || rect.height <= 0) return null;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
 
   const canvasRect = canvas.getBoundingClientRect();
   if (canvasRect.width <= 0 || canvasRect.height <= 0) return null;
-  // canvas.width/height are device-pixel-ratio-scaled (see Canvas.tsx's draw());
-  // canvasRect is in CSS pixels, so this ratio converts screen coords -> canvas
-  // pixel coords without assuming devicePixelRatio directly (more robust if the
-  // canvas is ever transformed/scaled by the layout).
   const scaleX = canvas.width / canvasRect.width;
   const scaleY = canvas.height / canvasRect.height;
 
-  const x = Math.max(0, Math.round((rect.left - canvasRect.left) * scaleX));
-  const y = Math.max(0, Math.round((rect.top - canvasRect.top) * scaleY));
-  const w = Math.min(canvas.width - x, Math.round(rect.width * scaleX));
-  const h = Math.min(canvas.height - y, Math.round(rect.height * scaleY));
-  if (w <= 4 || h <= 4) return null;
+  const sx = Math.max(0, Math.round((rect.left - canvasRect.left) * scaleX));
+  const sy = Math.max(0, Math.round((rect.top - canvasRect.top) * scaleY));
+  const sw = Math.min(canvas.width - sx, Math.round(rect.width * scaleX));
+  const sh = Math.min(canvas.height - sy, Math.round(rect.height * scaleY));
+  if (sw <= 4 || sh <= 4) return null;
 
-  let data: Uint8ClampedArray;
+  const ctx = getSampleCtx();
+  if (!ctx || !sampleCanvas) return null;
+
   try {
-    data = ctx.getImageData(x, y, w, h).data;
+    // Downscale the blit itself (source rect sw×sh -> dest DOWNSCALE_TO×DOWNSCALE_TO):
+    // the browser's own scaling during drawImage is effectively free GPU work
+    // and gives us a cheap average-ish sample without a manual pixel loop.
+    ctx.clearRect(0, 0, DOWNSCALE_TO, DOWNSCALE_TO);
+    ctx.drawImage(canvas, sx, sy, sw, sh, 0, 0, DOWNSCALE_TO, DOWNSCALE_TO);
   } catch {
     return null; // e.g. a tainted canvas — fail closed, caller keeps the previous reading
   }
 
+  let data: Uint8ClampedArray;
+  try {
+    data = ctx.getImageData(0, 0, DOWNSCALE_TO, DOWNSCALE_TO).data;
+  } catch {
+    return null;
+  }
+
   let sum = 0;
   let count = 0;
-  const rowStride = SAMPLE_STRIDE * 4;
-  const rowSkip = SAMPLE_STRIDE; // sample every Nth row too, not just every Nth pixel in a row
-  for (let row = 0; row < h; row += rowSkip) {
-    const rowStart = row * w * 4;
-    for (let i = rowStart; i < rowStart + w * 4; i += rowStride) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      const a = data[i + 3];
-      if (a === 0) continue; // transparent — don't let it skew toward "dark"
-      // perceptual luminance (Rec. 709)
-      sum += 0.2126 * r + 0.7152 * g + 0.0722 * b;
-      count++;
-    }
+  for (let i = 0; i < data.length; i += 4) {
+    const a = data[i + 3];
+    if (a === 0) continue; // transparent — don't let it skew toward "dark"
+    sum += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+    count++;
   }
   if (count === 0) return "light"; // fully transparent region — canvas background shows through, treat as light by default
 
