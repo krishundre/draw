@@ -16,6 +16,8 @@ import { useHead } from "./seo/useHead";
 import { getPageMeta } from "./seo/pages";
 import { JsonLd } from "./seo/JsonLd";
 import { softwareApplicationLd, organizationLd } from "./seo/structuredData";
+import { TutorialOverlay } from "./tutorial/TutorialOverlay";
+import { hasSeenTutorial, persistenceReady } from "./collab/doc";
 
 export default function App() {
   const store = useStore();
@@ -31,8 +33,25 @@ export default function App() {
     document.documentElement.setAttribute("data-theme", appState.theme);
   }, [appState.theme]);
 
+  // Show the first-time tutorial once, after we actually know whether this
+  // browser/room has seen it — checking the flag before the IndexedDB doc has
+  // synced would always read "unseen".
+  useEffect(() => {
+    let cancelled = false;
+    persistenceReady.then(() => {
+      if (!cancelled && !hasSeenTutorial()) {
+        store.setAppState({ tutorialOpen: true });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
+      if (appState.tutorialOpen) return; // the tutorial owns the keyboard while it's up
       const target = e.target as HTMLElement;
       const typing = target.tagName === "TEXTAREA" || target.tagName === "INPUT";
 
@@ -115,7 +134,7 @@ export default function App() {
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [store, appState.selectedIds, appState.theme]);
+  }, [store, appState.selectedIds, appState.theme, appState.tutorialOpen]);
 
   return (
     <div
@@ -164,6 +183,7 @@ export default function App() {
       {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} />}
       {helpOpen && <HelpDialog onClose={() => setHelpOpen(false)} />}
       {contextMenu && <ContextMenu x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)} />}
+      {appState.tutorialOpen && <TutorialOverlay />}
     </div>
   );
 }

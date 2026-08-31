@@ -1,6 +1,7 @@
 import { useStore } from "../state/store";
 import type { ArrowheadStyle, EdgeStyle, ElementStyle, FillStyle, FontFamily, Roughness, StrokeStyle, StrokeWidth, TextAlign, ArrowElement, TextElement } from "../types";
 import { Icon } from "./Icon";
+import { useAdaptiveContrast } from "../theme/useAdaptiveContrast";
 
 const STROKE_PRESETS = ["#1e1e1e", "#e03131", "#2f9e44", "#1971c2", "#f08c00"];
 const BG_PRESETS = ["transparent", "#ffc9c9", "#b2f2bb", "#a5d8ff", "#ffec99"];
@@ -52,6 +53,7 @@ export function StylePanel() {
   const style: ElementStyle = hasSelection ? selected[0] : appState.currentStyle;
 
   const showPanel = appState.tool !== "selection" || hasSelection;
+  const { ref: glassRef, background } = useAdaptiveContrast<HTMLDivElement>(showPanel);
   if (!showPanel) return null;
 
   function applyStyle(partial: Partial<ElementStyle>) {
@@ -69,7 +71,7 @@ export function StylePanel() {
   const arrowEl = selected.find((e) => e.type === "arrow") as ArrowElement | undefined;
 
   return (
-    <div className="style-panel">
+    <div className="style-panel" ref={glassRef} data-bg={background ?? undefined} data-tutorial="style-panel">
       <Section title="Stroke">
         <Swatches value={style.strokeColor} onChange={(v) => applyStyle({ strokeColor: v })} presets={STROKE_PRESETS} />
       </Section>

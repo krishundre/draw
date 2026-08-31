@@ -33,6 +33,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
       { id: "ungroup", label: "Ungroup selection", shortcut: "Ctrl+Shift+G", run: () => store.ungroup(store.appState.selectedIds) },
       { id: "front", label: "Bring to front", run: () => store.bringToFront(store.appState.selectedIds) },
       { id: "back", label: "Send to back", run: () => store.sendToBack(store.appState.selectedIds) },
+      { id: "replay-tutorial", label: "Replay tutorial", run: () => store.setAppState({ tutorialOpen: true }) },
     ],
     [store]
   );

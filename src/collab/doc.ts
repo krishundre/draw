@@ -56,3 +56,18 @@ export function getShareUrl(): string {
   url.searchParams.set("room", roomId);
   return url.toString();
 }
+
+const TUTORIAL_SEEN_KEY = "hasSeenTutorial";
+
+// Lives in the same Y.Doc/IndexedDB store as everything else (yMeta), rather
+// than localStorage, so it's consistent with the rest of the app's
+// persistence — and, like the board itself, is naturally scoped per-room:
+// joining a different collab room via a shared link is a fresh Yjs doc, so
+// it's a legitimate "first visit" for that board too.
+export function hasSeenTutorial(): boolean {
+  return yMeta.get(TUTORIAL_SEEN_KEY) === "true";
+}
+
+export function markTutorialSeen() {
+  ydoc.transact(() => yMeta.set(TUTORIAL_SEEN_KEY, "true"));
+}

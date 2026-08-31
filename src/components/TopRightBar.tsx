@@ -4,6 +4,7 @@ import { Icon } from "./Icon";
 import { getShareUrl, connectCollab } from "../collab/doc";
 import { StatsPanel } from "./StatsPanel";
 import { FeedbackDialog } from "./FeedbackDialog";
+import { useAdaptiveContrast } from "../theme/useAdaptiveContrast";
 
 const NAME_KEY = "drawboard-username";
 const COLOR_KEY = "drawboard-usercolor";
@@ -20,6 +21,7 @@ export function TopRightBar({ onOpenLibrary, onOpenHelp }: { onOpenLibrary: () =
   const [statsOpen, setStatsOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [connected, setConnected] = useState(false);
+  const { ref: glassRef, background } = useAdaptiveContrast<HTMLDivElement>();
 
   function toggleTheme() {
     setAppState({ theme: appState.theme === "light" ? "dark" : "light" });
@@ -44,11 +46,11 @@ export function TopRightBar({ onOpenLibrary, onOpenHelp }: { onOpenLibrary: () =
   }
 
   return (
-    <div className="top-right-bar">
+    <div className="top-right-bar" ref={glassRef} data-bg={background ?? undefined}>
       <button className="tool-btn" title="Library" onClick={onOpenLibrary}>
         📚
       </button>
-      <button className="tool-btn" title="Stats" onClick={() => setStatsOpen((v) => !v)}>
+      <button className="tool-btn" title="Stats" onClick={() => setStatsOpen((v) => !v)} data-tutorial="stats">
         <Icon name="menu" />
       </button>
       <button className="tool-btn" title="Toggle theme" onClick={toggleTheme}>
@@ -59,13 +61,13 @@ export function TopRightBar({ onOpenLibrary, onOpenHelp }: { onOpenLibrary: () =
           Share
         </button>
       )}
-      <button className="tool-btn" title="Send feedback" onClick={() => setFeedbackOpen(true)}>
+      <button className="tool-btn" title="Send feedback" onClick={() => setFeedbackOpen(true)} data-tutorial="feedback">
         💬
       </button>
-      <a className="tool-btn" title="Docs / Help guide" href={DOCS_URL} target="_blank" rel="noreferrer">
+      <a className="tool-btn" title="Docs / Help guide" href={DOCS_URL} target="_blank" rel="noreferrer" data-tutorial="docs">
         📖
       </a>
-      <button className="tool-btn" title="Keyboard shortcuts (?)" onClick={onOpenHelp}>
+      <button className="tool-btn" title="Keyboard shortcuts (?)" onClick={onOpenHelp} data-tutorial="help">
         ?
       </button>
       {feedbackOpen && <FeedbackDialog onClose={() => setFeedbackOpen(false)} />}

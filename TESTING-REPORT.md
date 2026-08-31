@@ -9,6 +9,18 @@
 
 ---
 
+## Addendum: "Liquid Glass" UI redesign + first-time tutorial (2026-08-31)
+
+A follow-up UI/UX pass (chrome only — canvas rendering, drawing logic, tool behavior, autosave, and the docs site were explicitly out of scope and untouched):
+
+- **Glass effect**: real `backdrop-filter: blur() saturate()` translucency (not a flat tint) applied to the toolbar, style panel, top-right icon bar, zoom/undo controls, menu/share/stats dropdowns, library panel, right-click context menu, command palette, help dialog, and feedback dialog — each with a 1px inner highlight and soft outer shadow, correct in both themes (`src/style.css`, `--glass-*` tokens). Verified visually in both light and dark theme.
+- **Adaptive icon/text contrast**: icons and text on the toolbar, style panel, top-right bar, zoom/history controls, context menu, stats panel, menu dropdown, and library panel now sample the canvas content directly behind them and flip between dark and light rendering independently of the app's theme — implemented as a **debounced settle-based sample** (~220ms after pan/zoom/draw stops), not per-frame, since a `getImageData` readback on every animation frame is a known perf cliff; this was the cheaper approximation the brief asked me to consider, and it's what's implemented (`src/theme/adaptiveContrast.ts`, `src/theme/useAdaptiveContrast.ts`). Verified end-to-end: a black-filled rectangle placed under the toolbar flipped its computed CSS color from `#1d1d1f` to `#f5f5f7` and back after clearing the canvas. Command palette, help dialog, and feedback dialog intentionally do **not** adapt — they sit behind a dark modal scrim, not directly on the canvas, so theme-based text already reads correctly there.
+- **First-time tutorial**: a 6-step skippable spotlight tour (`src/tutorial/`), shown once per board via a `hasSeenTutorial` flag in the same Yjs/IndexedDB store as the drawing itself (`yMeta`, not localStorage) — verified it shows on a fresh room, persists across reload, and doesn't reappear. Replayable from the command palette ("Replay tutorial") and the help dialog ("Replay the getting-started tour") — both verified working. Keyboard: Escape/Skip to dismiss, Arrow keys and Enter to navigate, Tab is trapped within the tooltip card, and all transitions are skipped under `prefers-reduced-motion`.
+- **Regression check**: re-ran the core interaction set (draw, undo/redo, `Ctrl+A`/`Ctrl+D`, pinch-zoom, layout at 375/768/1280px) after the redesign — all still pass, no console errors.
+- **Known gap**: this pass didn't re-run a live Lighthouse audit against the deployed site after shipping (see the main deliverables message for that number) — the glass blur is scoped to small fixed-size chrome elements only, per the brief's own performance guidance, specifically to avoid the canvas-sized-blur-region perf cliff.
+
+---
+
 ## 🚨 Security issues
 
 **No XSS, injection, or exposed-secret vulnerabilities found.** Specifically tested/verified:

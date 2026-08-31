@@ -23,6 +23,8 @@ An open-source, self-hostable whiteboard inspired by [Excalidraw](https://excali
 - **Installable PWA** with offline app-shell caching.
 - **Optional real-time collaboration**: shared cursors, presence, and live multi-user editing via [Yjs](https://yjs.dev/) — see [Collaboration](#real-time-collaboration-optional) below. (Not enabled on the public demo — see [Known limitations](#known-limitations).)
 - **In-app feedback form** that emails the maintainer directly.
+- **Apple-style "Liquid Glass" chrome**: the toolbar, panels, menus, and dialogs are real frosted glass (`backdrop-filter: blur()`, not a flat tint), and icon/text color adapts live to whatever's on the canvas directly behind each panel — independent of the light/dark theme, like iOS Control Center or the macOS menu bar over wallpaper.
+- **First-time tutorial**: a short, skippable 6-step spotlight tour on first visit (persisted in the same IndexedDB store as your drawings, not localStorage). Replay it anytime from the command palette (`Ctrl/Cmd+K`) or the help dialog (`Shift+/`).
 
 ## Quick start
 

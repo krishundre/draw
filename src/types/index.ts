@@ -130,6 +130,7 @@ export interface AppState {
   canvasBackground: string;
   gridEnabled: boolean;
   isDragging: boolean;
+  tutorialOpen: boolean;
 }
 
 export interface LibraryItem {

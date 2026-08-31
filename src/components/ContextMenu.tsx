@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { useStore } from "../state/store";
 import { newId, randomSeed } from "../utils/id";
+import { useAdaptiveContrast } from "../theme/useAdaptiveContrast";
 
 export function ContextMenu({ x, y, onClose }: { x: number; y: number; onClose: () => void }) {
   const { appState, elements, addElements, setSelectedIds, deleteElements, commitHistory, bringToFront, sendToBack, undo, redo } = useStore();
   const selected = elements.filter((e) => appState.selectedIds.includes(e.id));
+  const { ref: glassRef, background } = useAdaptiveContrast<HTMLDivElement>();
 
   useEffect(() => {
     const close = () => onClose();
@@ -51,7 +53,13 @@ export function ContextMenu({ x, y, onClose }: { x: number; y: number; onClose: 
   const hasSelection = selected.length > 0;
 
   return (
-    <div className="context-menu" style={{ left: x, top: y }} onClick={(e) => e.stopPropagation()}>
+    <div
+      className="context-menu"
+      style={{ left: x, top: y }}
+      onClick={(e) => e.stopPropagation()}
+      ref={glassRef}
+      data-bg={background ?? undefined}
+    >
       <button disabled={!hasSelection} onClick={duplicate}>
         Duplicate (Ctrl+D)
       </button>

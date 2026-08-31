@@ -3,10 +3,12 @@ import { useStore } from "../state/store";
 import { TOOLS } from "../tools/toolDefs";
 import { Icon } from "./Icon";
 import { createImageElement } from "../canvas/factory";
+import { useAdaptiveContrast } from "../theme/useAdaptiveContrast";
 
 export function Toolbar() {
   const { appState, setTool, addElement, setSelectedIds, commitHistory, elements } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { ref: glassRef, background } = useAdaptiveContrast<HTMLDivElement>();
 
   function onImageClick() {
     fileInputRef.current?.click();
@@ -43,7 +45,7 @@ export function Toolbar() {
   }
 
   return (
-    <div className="toolbar">
+    <div className="toolbar" ref={glassRef} data-bg={background ?? undefined} data-tutorial="toolbar">
       {TOOLS.map((t) => (
         <button
           key={t.type}

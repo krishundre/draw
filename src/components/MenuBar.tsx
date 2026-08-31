@@ -2,11 +2,14 @@ import { useRef, useState } from "react";
 import { useStore } from "../state/store";
 import { Icon } from "./Icon";
 import { downloadFile, exportToJSON, exportToPNG, exportToSVG, copyPNGToClipboard, parseImportedFile } from "../utils/export";
+import { useAdaptiveContrast } from "../theme/useAdaptiveContrast";
 
 export function MenuBar() {
   const [open, setOpen] = useState(false);
   const { elements, appState, setAllElements, setAppState } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const wrap = useAdaptiveContrast<HTMLDivElement>();
+  const menu = useAdaptiveContrast<HTMLDivElement>(open);
 
   function openImport() {
     fileInputRef.current?.click();
@@ -58,12 +61,12 @@ export function MenuBar() {
   }
 
   return (
-    <div className="menu-wrap">
+    <div className="menu-wrap" ref={wrap.ref} data-bg={wrap.background ?? undefined} data-tutorial="menu">
       <button className="tool-btn" title="Menu" onClick={() => setOpen((v) => !v)}>
         <Icon name="menu" />
       </button>
       {open && (
-        <div className="dropdown">
+        <div className="dropdown" ref={menu.ref} data-bg={menu.background ?? undefined}>
           <button onClick={openImport}>Open .excalidraw file…</button>
           <button onClick={handleExportJSON}>Save as .excalidraw (JSON)</button>
           <div className="dropdown-sep" />

@@ -5,6 +5,7 @@ import { newId, randomSeed } from "../utils/id";
 import type { LibraryItem, WhiteboardElement } from "../types";
 import { downloadFile } from "../utils/export";
 import { getCombinedBounds } from "../canvas/geometry";
+import { useAdaptiveContrast } from "../theme/useAdaptiveContrast";
 
 const STORAGE_KEY = "drawboard-library";
 
@@ -23,6 +24,7 @@ export function LibraryPanel({ onClose }: { onClose: () => void }) {
   const { elements, appState, addElements, setSelectedIds, commitHistory } = useStore();
   const [custom, setCustom] = useState<LibraryItem[]>(loadCustom());
   const fileRef = useRef<HTMLInputElement>(null);
+  const { ref: glassRef, background } = useAdaptiveContrast<HTMLDivElement>();
 
   useEffect(() => saveCustom(custom), [custom]);
 
@@ -74,7 +76,7 @@ export function LibraryPanel({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="library-panel">
+    <div className="library-panel" ref={glassRef} data-bg={background ?? undefined}>
       <div className="library-header">
         <span>Library</span>
         <button onClick={onClose}>✕</button>

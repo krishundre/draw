@@ -1,3 +1,5 @@
+import { useStore } from "../state/store";
+
 const SHORTCUTS: [string, string][] = [
   ["V / 1", "Selection tool"],
   ["R / 2", "Rectangle"],
@@ -25,6 +27,8 @@ const SHORTCUTS: [string, string][] = [
 ];
 
 export function HelpDialog({ onClose }: { onClose: () => void }) {
+  const setAppState = useStore((s) => s.setAppState);
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="help-dialog" onClick={(e) => e.stopPropagation()}>
@@ -39,6 +43,17 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
               <span>{label}</span>
             </div>
           ))}
+        </div>
+        <div className="help-footer">
+          <button
+            className="help-replay-tutorial"
+            onClick={() => {
+              setAppState({ tutorialOpen: true });
+              onClose();
+            }}
+          >
+            Replay the getting-started tour
+          </button>
         </div>
       </div>
     </div>

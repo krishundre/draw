@@ -14,6 +14,7 @@ import { TextEditorOverlay } from "../components/TextEditorOverlay";
 import { SelectionOverlay } from "../components/SelectionOverlay";
 import { CursorsOverlay } from "../components/CursorsOverlay";
 import { getProvider, onCollabConnected } from "../collab/doc";
+import { setRegisteredCanvas } from "./canvasRegistry";
 
 type DragMode =
   | { kind: "none" }
@@ -78,6 +79,11 @@ export function Canvas() {
   useEffect(() => {
     draw();
   }, [draw]);
+
+  useEffect(() => {
+    setRegisteredCanvas(canvasRef.current);
+    return () => setRegisteredCanvas(null);
+  }, []);
 
   useEffect(() => {
     const onResize = () => draw();

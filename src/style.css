@@ -9,6 +9,16 @@
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
   --danger: #e03131;
   color-scheme: light;
+
+  /* Apple-style "Liquid Glass" chrome tokens. Frosted translucency over a
+     real backdrop-filter blur, not a flat tinted color — the blur is what
+     makes it read as glass rather than a plain semi-transparent panel. */
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.7);
+  --glass-highlight: rgba(255, 255, 255, 0.85);
+  --glass-shadow: 0 12px 34px rgba(20, 20, 30, 0.14), 0 2px 8px rgba(20, 20, 30, 0.08);
+  --glass-blur: 22px;
+  --glass-radius: 16px;
 }
 
 [data-theme="dark"] {
@@ -21,6 +31,37 @@
   --accent-bg: #1c3a4d;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
   color-scheme: dark;
+
+  --glass-bg: rgba(36, 36, 40, 0.58);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-highlight: rgba(255, 255, 255, 0.16);
+  --glass-shadow: 0 12px 34px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* The floating-chrome frosted-glass treatment. Applied to fixed-size UI
+   elements only (toolbar, panels, menus, dialogs) — never to anything that
+   covers a large fraction of the viewport, since backdrop-filter blur cost
+   scales with the blurred area and a canvas-sized blur region is exactly the
+   kind of thing that shows up as dropped frames in profiling. */
+.glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* Content-adaptive icon/text color — independent of the light/dark THEME
+   above. Set via data-bg="light"|"dark" from useAdaptiveContrast, reflecting
+   what's on the canvas directly behind this panel right now. Falls back to
+   the theme's normal --text color (through the `color: inherit` chain on
+   buttons/labels below) until the first sample resolves. */
+.glass[data-bg="light"] {
+  color: #1d1d1f;
+}
+.glass[data-bg="dark"] {
+  color: #f5f5f7;
 }
 
 * {
@@ -124,12 +165,24 @@ button {
 
 .toolbar,
 .menu-wrap {
-  background: var(--panel-bg);
-  border-radius: 10px;
-  box-shadow: var(--shadow);
-  padding: 4px;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+  padding: 5px;
   display: flex;
   gap: 2px;
+}
+
+.toolbar[data-bg="light"],
+.menu-wrap[data-bg="light"] {
+  color: #1d1d1f;
+}
+.toolbar[data-bg="dark"],
+.menu-wrap[data-bg="dark"] {
+  color: #f5f5f7;
 }
 
 .toolbar {
@@ -154,14 +207,15 @@ button {
   justify-content: center;
   border: none;
   background: transparent;
-  border-radius: 8px;
-  color: var(--text);
+  border-radius: 9px;
+  color: inherit;
   text-decoration: none;
   font-size: 16px;
+  transition: background-color 0.12s ease;
 }
 
 .tool-btn:hover {
-  background: var(--accent-bg);
+  background: rgba(127, 127, 127, 0.16);
 }
 
 .tool-btn.active {
@@ -187,15 +241,25 @@ button {
   position: absolute;
   top: 12px;
   left: 12px;
-  margin-top: 56px;
-  width: 210px;
+  margin-top: 58px;
+  width: 216px;
   max-height: calc(100vh - 90px);
   overflow-y: auto;
-  background: var(--panel-bg);
-  border-radius: 10px;
-  box-shadow: var(--shadow);
-  padding: 12px;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+  padding: 14px;
   z-index: 4;
+}
+
+.style-panel[data-bg="light"] {
+  color: #1d1d1f;
+}
+.style-panel[data-bg="dark"] {
+  color: #f5f5f7;
 }
 
 .panel-section {
@@ -245,10 +309,10 @@ button {
 
 .seg-btn {
   flex: 1;
-  border: 1px solid var(--panel-border);
-  background: var(--panel-bg);
-  color: var(--text);
-  border-radius: 6px;
+  border: 1px solid rgba(127, 127, 127, 0.25);
+  background: rgba(127, 127, 127, 0.1);
+  color: inherit;
+  border-radius: 7px;
   padding: 5px 6px;
   font-size: 12px;
   min-width: 40px;
@@ -267,10 +331,10 @@ button {
 }
 
 .icon-row button {
-  border: 1px solid var(--panel-border);
-  background: var(--panel-bg);
-  color: var(--text);
-  border-radius: 6px;
+  border: 1px solid rgba(127, 127, 127, 0.25);
+  background: rgba(127, 127, 127, 0.1);
+  color: inherit;
+  border-radius: 7px;
   padding: 5px 8px;
   font-size: 12px;
   display: flex;
@@ -279,7 +343,7 @@ button {
 }
 
 .icon-row button:hover {
-  background: var(--accent-bg);
+  background: rgba(127, 127, 127, 0.2);
 }
 
 input[type="range"] {
@@ -309,24 +373,36 @@ select {
 .zoom-controls,
 .history-controls {
   display: flex;
-  background: var(--panel-bg);
-  border-radius: 10px;
-  box-shadow: var(--shadow);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
   overflow: hidden;
+}
+
+.zoom-controls[data-bg="light"],
+.history-controls[data-bg="light"] {
+  color: #1d1d1f;
+}
+.zoom-controls[data-bg="dark"],
+.history-controls[data-bg="dark"] {
+  color: #f5f5f7;
 }
 
 .zoom-controls button,
 .history-controls button {
   border: none;
   background: transparent;
-  color: var(--text);
+  color: inherit;
   padding: 8px 12px;
   font-size: 13px;
 }
 
 .zoom-controls button:hover,
 .history-controls button:not(:disabled):hover {
-  background: var(--accent-bg);
+  background: rgba(127, 127, 127, 0.16);
 }
 
 .history-controls button:disabled {
@@ -342,25 +418,49 @@ select {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 2px;
+  padding: 5px;
   z-index: 6;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
   /* Mirror .top-left-bar's half-viewport cap — see its comment. Wraps to a
      second row rather than overlapping the toolbar on narrow viewports. */
   max-width: calc(50vw - 20px);
 }
 
+.top-right-bar[data-bg="light"] {
+  color: #1d1d1f;
+}
+.top-right-bar[data-bg="dark"] {
+  color: #f5f5f7;
+}
+
 .dropdown {
   position: absolute;
-  top: 44px;
-  background: var(--panel-bg);
-  border-radius: 10px;
-  box-shadow: var(--shadow);
+  top: 48px;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
   padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 220px;
   z-index: 20;
+}
+
+.dropdown[data-bg="light"] {
+  color: #1d1d1f;
+}
+.dropdown[data-bg="dark"] {
+  color: #f5f5f7;
 }
 
 .menu-wrap .dropdown {
@@ -375,14 +475,14 @@ select {
   text-align: left;
   border: none;
   background: transparent;
-  color: var(--text);
+  color: inherit;
   padding: 8px 10px;
-  border-radius: 6px;
+  border-radius: 7px;
   font-size: 13px;
 }
 
 .dropdown button:hover {
-  background: var(--accent-bg);
+  background: rgba(127, 127, 127, 0.16);
 }
 
 .dropdown button.danger {
@@ -444,11 +544,21 @@ select {
   width: 260px;
   max-height: 70vh;
   overflow-y: auto;
-  background: var(--panel-bg);
-  border-radius: 10px;
-  box-shadow: var(--shadow);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
   padding: 10px;
   z-index: 6;
+}
+
+.library-panel[data-bg="light"] {
+  color: #1d1d1f;
+}
+.library-panel[data-bg="dark"] {
+  color: #f5f5f7;
 }
 
 .library-header {
@@ -462,7 +572,7 @@ select {
 .library-header button {
   border: none;
   background: transparent;
-  color: var(--text);
+  color: inherit;
 }
 
 .library-toolbar {
@@ -473,10 +583,10 @@ select {
 }
 
 .library-toolbar button {
-  border: 1px solid var(--panel-border);
-  background: var(--panel-bg);
-  color: var(--text);
-  border-radius: 6px;
+  border: 1px solid rgba(127, 127, 127, 0.25);
+  background: rgba(127, 127, 127, 0.1);
+  color: inherit;
+  border-radius: 7px;
   padding: 4px 8px;
   font-size: 12px;
 }
@@ -495,9 +605,9 @@ select {
 }
 
 .library-item {
-  border: 1px solid var(--panel-border);
-  background: var(--bg);
-  color: var(--text);
+  border: 1px solid rgba(127, 127, 127, 0.25);
+  background: rgba(127, 127, 127, 0.08);
+  color: inherit;
   border-radius: 8px;
   padding: 10px 6px;
   font-size: 12px;
@@ -529,9 +639,12 @@ select {
 /* Context menu */
 .context-menu {
   position: fixed;
-  background: var(--panel-bg);
-  border-radius: 10px;
-  box-shadow: var(--shadow);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
   padding: 6px;
   display: flex;
   flex-direction: column;
@@ -540,18 +653,25 @@ select {
   z-index: 50;
 }
 
+.context-menu[data-bg="light"] {
+  color: #1d1d1f;
+}
+.context-menu[data-bg="dark"] {
+  color: #f5f5f7;
+}
+
 .context-menu button {
   text-align: left;
   border: none;
   background: transparent;
-  color: var(--text);
+  color: inherit;
   padding: 7px 10px;
-  border-radius: 6px;
+  border-radius: 7px;
   font-size: 13px;
 }
 
 .context-menu button:hover:not(:disabled) {
-  background: var(--accent-bg);
+  background: rgba(127, 127, 127, 0.16);
 }
 
 .context-menu button:disabled {
@@ -577,21 +697,31 @@ select {
 .command-palette {
   width: 480px;
   max-height: 60vh;
-  background: var(--panel-bg);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
+.command-palette[data-bg="light"] {
+  color: #1d1d1f;
+}
+.command-palette[data-bg="dark"] {
+  color: #f5f5f7;
+}
+
 .command-palette input {
   border: none;
-  border-bottom: 1px solid var(--panel-border);
+  border-bottom: 1px solid var(--glass-border);
   padding: 14px 16px;
   font-size: 15px;
   background: transparent;
-  color: var(--text);
+  color: inherit;
 }
 
 .command-palette input:focus-visible {
@@ -635,9 +765,12 @@ select {
 .help-dialog {
   width: 520px;
   max-height: 70vh;
-  background: var(--panel-bg);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
   padding: 16px 20px;
   overflow-y: auto;
 }
@@ -669,6 +802,28 @@ select {
   font-size: 13px;
 }
 
+.help-footer {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.help-replay-tutorial {
+  width: 100%;
+  text-align: center;
+  background: rgba(127, 127, 127, 0.12);
+  border: 1px solid var(--panel-border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 9px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.help-replay-tutorial:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
 .help-row kbd {
   background: var(--accent-bg);
   color: var(--accent);
@@ -683,9 +838,12 @@ select {
   width: 420px;
   max-height: 80vh;
   overflow-y: auto;
-  background: var(--panel-bg);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
   padding: 16px 20px 20px;
 }
 
@@ -750,6 +908,125 @@ select {
   flex-direction: column;
   gap: 14px;
   align-items: center;
+}
+
+/* First-time tutorial */
+.tutorial-root {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+}
+
+.tutorial-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.tutorial-spotlight {
+  position: fixed;
+  border-radius: 14px;
+  /* This single huge box-shadow IS the dimming layer — everything outside
+     this rect goes dark, the rect itself stays fully clear. */
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  transition: left 0.22s ease, top 0.22s ease, width 0.22s ease, height 0.22s ease;
+}
+.tutorial-spotlight.no-motion {
+  transition: none;
+}
+
+.tutorial-tooltip {
+  position: fixed;
+  width: 300px;
+  padding: 18px 20px;
+  z-index: 210;
+  transition: left 0.22s ease, top 0.22s ease;
+}
+.tutorial-tooltip.no-motion {
+  transition: none;
+}
+.tutorial-tooltip:focus {
+  outline: none;
+}
+
+.tutorial-step-count {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  margin-bottom: 6px;
+}
+
+.tutorial-tooltip h2 {
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+
+.tutorial-tooltip p {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 16px;
+  opacity: 0.85;
+}
+
+.tutorial-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tutorial-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.tutorial-skip {
+  background: transparent;
+  border: none;
+  color: inherit;
+  opacity: 0.7;
+  font-size: 13px;
+  padding: 6px 4px;
+}
+.tutorial-skip:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.tutorial-back {
+  background: rgba(127, 127, 127, 0.15);
+  border: none;
+  color: inherit;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+}
+.tutorial-back:hover {
+  background: rgba(127, 127, 127, 0.25);
+}
+
+.tutorial-next {
+  background: var(--accent);
+  border: none;
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 13px;
+}
+.tutorial-next:focus-visible,
+.tutorial-back:focus-visible,
+.tutorial-skip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-spotlight,
+  .tutorial-tooltip {
+    transition: none !important;
+  }
 }
 
 /* Honeypot: visually hidden but not display:none, so basic bots that skip

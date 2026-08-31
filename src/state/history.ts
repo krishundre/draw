@@ -81,5 +81,6 @@ export function defaultAppState(): AppState {
     canvasBackground: "#ffffff",
     gridEnabled: false,
     isDragging: false,
+    tutorialOpen: false,
   };
 }

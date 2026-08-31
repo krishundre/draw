@@ -1,13 +1,15 @@
 import { useStore } from "../state/store";
 import { getCombinedBounds } from "../canvas/geometry";
+import { useAdaptiveContrast } from "../theme/useAdaptiveContrast";
 
 export function StatsPanel() {
   const { elements, appState } = useStore();
   const selected = elements.filter((e) => appState.selectedIds.includes(e.id));
   const bounds = selected.length ? getCombinedBounds(selected) : null;
+  const { ref, background } = useAdaptiveContrast<HTMLDivElement>();
 
   return (
-    <div className="dropdown stats-dropdown">
+    <div className="dropdown stats-dropdown" ref={ref} data-bg={background ?? undefined}>
       <div className="stats-row">
         <span>Elements</span>
         <span>{elements.length}</span>
