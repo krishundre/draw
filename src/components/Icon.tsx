@@ -89,6 +89,13 @@ function shapeFor(name: string) {
       );
     case "crop":
       return <path d="M6 2 V14 H18 M2 6 H14 V18" />;
+    case "embed":
+      return (
+        <>
+          <rect x="2.5" y="4" width="15" height="12" rx="1.5" />
+          <path d="M7 8.5 L4.5 10.5 L7 12.5 M13 8.5 L15.5 10.5 L13 12.5" />
+        </>
+      );
     default:
       return <circle cx="10" cy="10" r="6" />;
   }

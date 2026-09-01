@@ -5,6 +5,7 @@ import type {
   DiamondElement,
   DrawElement,
   EllipseElement,
+  EmbedElement,
   FrameElement,
   ImageElement,
   LineElement,
@@ -58,6 +59,7 @@ export function createElement(appState: AppState, type: ToolType, x: number, y: 
         endArrowhead: appState.currentEndArrowhead,
         startBinding: null,
         endBinding: null,
+        elbowed: appState.currentElbowed,
       } as ArrowElement;
     case "draw":
       return {
@@ -88,4 +90,15 @@ export function createImageElement(appState: AppState, x: number, y: number, zIn
     dataURL,
     crop: null,
   } as ImageElement;
+}
+
+export function createEmbedElement(appState: AppState, x: number, y: number, zIndex: number, url: string): EmbedElement {
+  const width = 400;
+  const height = 300;
+  return {
+    ...base(appState, "embed", x - width / 2, y - height / 2, zIndex),
+    width,
+    height,
+    url,
+  } as EmbedElement;
 }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useStore } from "../state/store";
 import { copyElementsToClipboard, readElementsFromClipboard } from "../utils/clipboard";
 import { newId, randomSeed } from "../utils/id";
+import type { ArrowElement } from "../types";
 
 interface Command {
   id: string;
@@ -10,7 +11,17 @@ interface Command {
   run: () => void;
 }
 
-export function CommandPalette({ onClose, onOpenSearch }: { onClose: () => void; onOpenSearch: () => void }) {
+export function CommandPalette({
+  onClose,
+  onOpenSearch,
+  onOpenAIGenerate,
+  onOpenAISettings,
+}: {
+  onClose: () => void;
+  onOpenSearch: () => void;
+  onOpenAIGenerate: () => void;
+  onOpenAISettings: () => void;
+}) {
   const store = useStore();
   const [query, setQuery] = useState("");
 
@@ -67,10 +78,25 @@ export function CommandPalette({ onClose, onOpenSearch }: { onClose: () => void;
           });
         },
       },
+      {
+        id: "toggle-elbow",
+        label: "Toggle elbow (flowchart connector) on selected arrow",
+        run: () => {
+          const arrows = store.elements.filter((el) => store.appState.selectedIds.includes(el.id) && el.type === "arrow") as ArrowElement[];
+          arrows.forEach((a) => {
+            const elbowed = !a.elbowed;
+            const points = elbowed ? [a.points[0], a.points[a.points.length - 1]] : a.points;
+            store.updateElement(a.id, { elbowed, points } as never);
+          });
+          if (arrows.length) store.commitHistory();
+        },
+      },
       { id: "search-elements", label: "Search elements", shortcut: "Ctrl+Shift+F", run: onOpenSearch },
+      { id: "ai-generate", label: "Generate diagram from text (AI)", run: onOpenAIGenerate },
+      { id: "ai-settings", label: "AI settings (API key)", run: onOpenAISettings },
       { id: "replay-tutorial", label: "Replay tutorial", run: () => store.setAppState({ tutorialOpen: true }) },
     ],
-    [store, onOpenSearch]
+    [store, onOpenSearch, onOpenAIGenerate, onOpenAISettings]
   );
 
   const filtered = commands.filter((c) => c.label.toLowerCase().includes(query.toLowerCase()));

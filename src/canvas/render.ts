@@ -7,14 +7,17 @@ import type {
   DrawElement,
   TextElement,
   ImageElement,
+  EmbedElement,
   FrameElement,
   ArrowheadStyle,
   Roughness,
   StrokeWidth,
   StrokeStyle,
 } from "../types";
+import { embedHostLabel } from "../utils/embedAllowlist";
 import { getStroke } from "perfect-freehand";
 import { fontStack, wrapTextToWidth } from "./text";
+import { computeElbowPoints } from "./elbow";
 
 const imageCache = new Map<string, HTMLImageElement>();
 
@@ -172,6 +175,10 @@ function drawElement(rc: RoughCanvas, ctx: CanvasRenderingContext2D, el: Whitebo
       drawImage(ctx, el as ImageElement);
       break;
     }
+    case "embed": {
+      drawEmbedPlaceholder(ctx, el as EmbedElement);
+      break;
+    }
   }
 }
 
@@ -181,7 +188,8 @@ export function roundedRectPath(x: number, y: number, w: number, h: number, r: n
 }
 
 function drawArrow(rc: RoughCanvas, ctx: CanvasRenderingContext2D, a: ArrowElement, opts: ReturnType<typeof roughOptions>) {
-  const pts = a.points.map((p) => [a.x + p.x, a.y + p.y]) as [number, number][];
+  const worldPoints = a.elbowed ? computeElbowPoints({ x: a.x + a.points[0].x, y: a.y + a.points[0].y }, { x: a.x + a.points[a.points.length - 1].x, y: a.y + a.points[a.points.length - 1].y }) : a.points.map((p) => ({ x: a.x + p.x, y: a.y + p.y }));
+  const pts = worldPoints.map((p) => [p.x, p.y]) as [number, number][];
   if (pts.length < 2) return;
   rc.linearPath(pts, opts);
   const end = pts[pts.length - 1];
@@ -275,6 +283,26 @@ function drawText(ctx: CanvasRenderingContext2D, t: TextElement) {
   lines.forEach((line, i) => {
     ctx.fillText(line, anchorX, t.y + i * lineHeight);
   });
+  ctx.restore();
+}
+
+// Canvas can't host a live cross-origin <iframe> (that's a real DOM overlay,
+// see EmbedOverlay.tsx) — this placeholder is what actually ends up in
+// PNG/SVG exports, and what briefly shows before the overlay iframe loads.
+function drawEmbedPlaceholder(ctx: CanvasRenderingContext2D, el: EmbedElement) {
+  ctx.save();
+  ctx.strokeStyle = "#868e96";
+  ctx.fillStyle = "#f1f3f5";
+  ctx.lineWidth = 1;
+  ctx.setLineDash([6, 4]);
+  ctx.fillRect(el.x, el.y, el.width, el.height);
+  ctx.strokeRect(el.x, el.y, el.width, el.height);
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#495057";
+  ctx.font = "13px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(embedHostLabel(el.url), el.x + el.width / 2, el.y + el.height / 2);
   ctx.restore();
 }
 

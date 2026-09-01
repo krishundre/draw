@@ -42,10 +42,23 @@ export function LibraryPanel({ onClose }: { onClose: () => void }) {
       idMap.set(el.id, id);
       return { ...el, id, seed: randomSeed(), zIndex: elements.length };
     });
-    const bounds = getCombinedBounds(clones);
+    // Remap internal references (bound text -> container, bound arrow ->
+    // shape) from the library item's own IDs to the freshly-minted clone
+    // IDs — otherwise every binding in the pasted copy points at nothing.
+    const remapped = clones.map((el) => {
+      const withContainer = "containerId" in el && el.containerId ? { ...el, containerId: idMap.get(el.containerId) ?? null } : el;
+      if (!("startBinding" in withContainer)) return withContainer;
+      const a = withContainer as typeof withContainer & { startBinding: { elementId: string } | null; endBinding: { elementId: string } | null };
+      return {
+        ...a,
+        startBinding: a.startBinding && idMap.has(a.startBinding.elementId) ? { ...a.startBinding, elementId: idMap.get(a.startBinding.elementId)! } : null,
+        endBinding: a.endBinding && idMap.has(a.endBinding.elementId) ? { ...a.endBinding, elementId: idMap.get(a.endBinding.elementId)! } : null,
+      };
+    });
+    const bounds = getCombinedBounds(remapped);
     const offsetX = 200 - (bounds.x1 + bounds.x2) / 2;
     const offsetY = 200 - (bounds.y1 + bounds.y2) / 2;
-    const placed = clones.map((el) => ({ ...el, x: el.x + offsetX, y: el.y + offsetY })) as WhiteboardElement[];
+    const placed = remapped.map((el) => ({ ...el, x: el.x + offsetX, y: el.y + offsetY })) as WhiteboardElement[];
     addElements(placed);
     setSelectedIds(placed.map((e) => e.id));
     commitHistory();

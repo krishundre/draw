@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useStore } from "../state/store";
 import { renderScene, getCachedImage } from "./render";
-import { createElement } from "./factory";
+import { createElement, createEmbedElement } from "./factory";
+import { isEmbeddableUrl } from "../utils/embedAllowlist";
 import {
   getCombinedBounds,
   getResizeHandles,
@@ -10,12 +11,13 @@ import {
   isPointInElement,
   type HandlePosition,
 } from "./geometry";
-import type { ArrowElement, DrawElement, ImageCrop, ImageElement, LineElement, Point, TextElement, WhiteboardElement } from "../types";
+import type { ArrowElement, DrawElement, EmbedElement, ImageCrop, ImageElement, LineElement, Point, TextElement, WhiteboardElement } from "../types";
 import { TextEditorOverlay } from "../components/TextEditorOverlay";
 import { SelectionOverlay } from "../components/SelectionOverlay";
 import { CursorsOverlay } from "../components/CursorsOverlay";
 import { PointEditorOverlay } from "../components/PointEditorOverlay";
 import { CropOverlay } from "../components/CropOverlay";
+import { EmbedOverlay } from "../components/EmbedOverlay";
 import { getProvider, onCollabConnected } from "../collab/doc";
 import { setRegisteredCanvas } from "./canvasRegistry";
 import { findBindableShapeAt } from "./binding";
@@ -66,21 +68,26 @@ export function Canvas() {
   const { elements, appState, setAppState, addElement, updateElement, deleteElements, commitHistory, setSelectedIds, setTool, syncBoundArrows, syncBoundText } = useStore();
   const editingPointsId = appState.editingPointsId;
   const croppingId = appState.croppingId;
+  const interactingEmbedId = appState.interactingEmbedId;
   const setEditingPointsId = (id: string | null) => setAppState({ editingPointsId: id });
   const setCroppingId = (id: string | null) => setAppState({ croppingId: id });
+  const setInteractingEmbedId = (id: string | null) => setAppState({ interactingEmbedId: id });
 
-  // Point-edit / crop mode are ephemeral UI-only appState fields (like
-  // editingTextId) — kept in the store rather than local state so other
-  // components (the context menu's "Crop image" entry) can trigger them.
-  // Drop out automatically whenever the element being edited is no longer
-  // the (sole) selection, so switching tools, selecting something else, or
-  // pressing Escape (which clears selection) all exit cleanly.
+  // Point-edit / crop / embed-interact mode are ephemeral UI-only appState
+  // fields (like editingTextId) — kept in the store rather than local state
+  // so other components (the context menu's "Crop image" entry) can trigger
+  // them. Drop out automatically whenever the element being edited is no
+  // longer the (sole) selection, so switching tools, selecting something
+  // else, or pressing Escape (which clears selection) all exit cleanly.
   useEffect(() => {
     if (editingPointsId && !appState.selectedIds.includes(editingPointsId)) setEditingPointsId(null);
   }, [appState.selectedIds, editingPointsId]);
   useEffect(() => {
     if (croppingId && !appState.selectedIds.includes(croppingId)) setCroppingId(null);
   }, [appState.selectedIds, croppingId]);
+  useEffect(() => {
+    if (interactingEmbedId && !appState.selectedIds.includes(interactingEmbedId)) setInteractingEmbedId(null);
+  }, [appState.selectedIds, interactingEmbedId]);
 
   const toWorld = useCallback(
     (clientX: number, clientY: number): Point => {
@@ -479,6 +486,23 @@ export function Canvas() {
       return;
     }
 
+    if (appState.tool === "embed") {
+      const url = prompt(
+        "Paste a URL to embed (YouTube, Vimeo, Figma, CodeSandbox, CodePen, Google Docs/Maps, Loom, Spotify, GitHub Gist, Notion, or Observable):"
+      );
+      setTool("selection");
+      if (!url) return;
+      if (!isEmbeddableUrl(url)) {
+        alert("That URL isn't on the allowed list of embeddable sites — for security, DrawBoard only embeds a curated set of known services.");
+        return;
+      }
+      const el = createEmbedElement(appState, world.x, world.y, elements.length, url);
+      addElement(el);
+      setSelectedIds([el.id]);
+      commitHistory();
+      return;
+    }
+
     const el = createElement(appState, appState.tool, world.x, world.y, elements.length);
     if (!el) return;
     if (el.type === "arrow") {
@@ -739,11 +763,13 @@ export function Canvas() {
     if (drag.kind === "drawing") {
       const el = useStore.getState().elements.find((x) => x.id === drag.elementId);
       const wasClick = el && el.width < 3 && el.height < 3;
-      if (wasClick && el && (el.type === "line" || el.type === "arrow")) {
+      if (wasClick && el && (el.type === "line" || (el.type === "arrow" && !(el as ArrowElement).elbowed))) {
         // A plain click (no drag) with the line/arrow tool starts a
         // click-chain: click to place each point, click near the last point
         // (or Enter) to finish, Escape to cancel. The 2-point drag-to-draw
         // above is unaffected — this only triggers when nothing was dragged.
+        // Elbow arrows skip this: extra manual points would just get
+        // discarded by the router, which would be confusing to click through.
         dragRef.current = { kind: "multipoint", elementId: el.id };
         return;
       }
@@ -803,9 +829,22 @@ export function Canvas() {
       el.textAlign = "center";
       addElement(el);
       setAppState({ editingTextId: el.id });
-    } else if (hit && appState.tool === "selection" && (hit.type === "line" || hit.type === "arrow")) {
+    } else if (
+      hit &&
+      appState.tool === "selection" &&
+      (hit.type === "line" || (hit.type === "arrow" && !(hit as ArrowElement).elbowed))
+    ) {
+      // Elbow arrows route automatically from their anchor points — there
+      // are no manual bend points to edit, so point-edit mode is skipped;
+      // reshaping one means moving its endpoints or the shapes it's bound to.
       setSelectedIds([hit.id]);
       setEditingPointsId(hit.id);
+    } else if (hit && appState.tool === "selection" && hit.type === "embed") {
+      // Enter "interact" mode so the iframe becomes clickable (see
+      // EmbedOverlay) — otherwise it stays inert so normal canvas
+      // selection/move/resize can hit-test it like any other element.
+      setSelectedIds([hit.id]);
+      setInteractingEmbedId(hit.id);
     }
   }
 
@@ -902,6 +941,13 @@ export function Canvas() {
           return <CropOverlay image={img} scrollX={appState.scrollX} scrollY={appState.scrollY} zoom={appState.zoom} />;
         })()}
       {appState.editingTextId && <TextEditorOverlay elementId={appState.editingTextId} />}
+      <EmbedOverlay
+        elements={elements.filter((e) => e.type === "embed") as EmbedElement[]}
+        interactingId={interactingEmbedId}
+        scrollX={appState.scrollX}
+        scrollY={appState.scrollY}
+        zoom={appState.zoom}
+      />
       <CursorsOverlay scrollX={appState.scrollX} scrollY={appState.scrollY} zoom={appState.zoom} />
     </div>
   );

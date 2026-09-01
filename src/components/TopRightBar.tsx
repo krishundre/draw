@@ -19,10 +19,12 @@ export function TopRightBar({
   onOpenLibrary,
   onOpenHelp,
   onOpenSearch,
+  onOpenAIGenerate,
 }: {
   onOpenLibrary: () => void;
   onOpenHelp: () => void;
   onOpenSearch: () => void;
+  onOpenAIGenerate: () => void;
 }) {
   const { appState, setAppState } = useStore();
   const [shareOpen, setShareOpen] = useState(false);
@@ -63,6 +65,9 @@ export function TopRightBar({
       </button>
       <button className="tool-btn" title="Search elements (Ctrl+Shift+F)" onClick={onOpenSearch}>
         <Icon name="search" />
+      </button>
+      <button className="tool-btn" title="Generate diagram (AI, bring your own API key)" onClick={onOpenAIGenerate}>
+        ✨
       </button>
       <button className="tool-btn" title="Toggle theme" onClick={toggleTheme}>
         <Icon name={appState.theme === "light" ? "moon" : "sun"} />

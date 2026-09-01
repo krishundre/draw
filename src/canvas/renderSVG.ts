@@ -4,6 +4,7 @@ import type {
   ArrowElement,
   ArrowheadStyle,
   DrawElement,
+  EmbedElement,
   FrameElement,
   ImageElement,
   LineElement,
@@ -13,6 +14,8 @@ import type {
 import { getCombinedBounds } from "./geometry";
 import { roughOptions, roundedRectPath, strokeWidthValue, getCachedImage } from "./render";
 import { fontStack, wrapTextToWidth } from "./text";
+import { computeElbowPoints } from "./elbow";
+import { embedHostLabel } from "../utils/embedAllowlist";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -134,11 +137,42 @@ function appendElement(rc: ReturnType<typeof rough.svg>, g: SVGGElement, el: Whi
       appendImage(g, el as ImageElement);
       break;
     }
+    case "embed": {
+      appendEmbedPlaceholder(g, el as EmbedElement);
+      break;
+    }
   }
 }
 
+// SVG can't host a live cross-origin iframe either — same placeholder the
+// canvas renderer draws for PNG export.
+function appendEmbedPlaceholder(g: SVGGElement, el: EmbedElement) {
+  const rect = document.createElementNS(SVG_NS, "rect");
+  rect.setAttribute("x", String(el.x));
+  rect.setAttribute("y", String(el.y));
+  rect.setAttribute("width", String(el.width));
+  rect.setAttribute("height", String(el.height));
+  rect.setAttribute("fill", "#f1f3f5");
+  rect.setAttribute("stroke", "#868e96");
+  rect.setAttribute("stroke-dasharray", "6 4");
+  g.appendChild(rect);
+  const label = document.createElementNS(SVG_NS, "text");
+  label.setAttribute("x", String(el.x + el.width / 2));
+  label.setAttribute("y", String(el.y + el.height / 2));
+  label.setAttribute("font-size", "13");
+  label.setAttribute("font-family", "sans-serif");
+  label.setAttribute("text-anchor", "middle");
+  label.setAttribute("dominant-baseline", "middle");
+  label.setAttribute("fill", "#495057");
+  label.textContent = embedHostLabel(el.url);
+  g.appendChild(label);
+}
+
 function appendArrow(rc: ReturnType<typeof rough.svg>, g: SVGGElement, a: ArrowElement, opts: ReturnType<typeof roughOptions>) {
-  const pts = a.points.map((p) => [a.x + p.x, a.y + p.y]) as [number, number][];
+  const worldPoints = a.elbowed
+    ? computeElbowPoints({ x: a.x + a.points[0].x, y: a.y + a.points[0].y }, { x: a.x + a.points[a.points.length - 1].x, y: a.y + a.points[a.points.length - 1].y })
+    : a.points.map((p) => ({ x: a.x + p.x, y: a.y + p.y }));
+  const pts = worldPoints.map((p) => [p.x, p.y]) as [number, number][];
   if (pts.length < 2) return;
   g.appendChild(rc.linearPath(pts, opts));
   const end = pts[pts.length - 1];

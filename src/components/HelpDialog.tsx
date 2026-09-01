@@ -11,6 +11,7 @@ const SHORTCUTS: [string, string][] = [
   ["P / 7", "Draw (freehand)"],
   ["T / 8", "Text"],
   ["9", "Insert image"],
+  ["W", "Embed a web page (YouTube, Figma, etc.)"],
   ["E / 0", "Eraser"],
   ["F", "Frame"],
   ["H / Space-drag", "Hand (pan)"],

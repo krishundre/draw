@@ -1,4 +1,5 @@
 import type { WhiteboardElement, Point, ArrowElement, LineElement, DrawElement } from "../types";
+import { computeElbowPoints } from "./elbow";
 
 export function getElementBounds(el: WhiteboardElement): { x1: number; y1: number; x2: number; y2: number } {
   if ("points" in el && (el as ArrowElement | LineElement | DrawElement).points.length) {
@@ -41,7 +42,10 @@ export function isPointInElement(px: number, py: number, el: WhiteboardElement):
 
 function distanceToPolyline(px: number, py: number, el: DrawElement | LineElement | ArrowElement): number {
   let min = Infinity;
-  const pts = el.points.map((p) => ({ x: p.x + el.x, y: p.y + el.y }));
+  const isElbowArrow = el.type === "arrow" && (el as ArrowElement).elbowed;
+  const pts = isElbowArrow
+    ? computeElbowPoints({ x: el.x + el.points[0].x, y: el.y + el.points[0].y }, { x: el.x + el.points[el.points.length - 1].x, y: el.y + el.points[el.points.length - 1].y })
+    : el.points.map((p) => ({ x: p.x + el.x, y: p.y + el.y }));
   for (let i = 0; i < pts.length - 1; i++) {
     min = Math.min(min, distToSegment(px, py, pts[i], pts[i + 1]));
   }

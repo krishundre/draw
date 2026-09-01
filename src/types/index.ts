@@ -9,6 +9,7 @@ export type ToolType =
   | "draw"
   | "text"
   | "image"
+  | "embed"
   | "eraser"
   | "frame"
   | "hand";
@@ -84,6 +85,10 @@ export interface ArrowElement extends BaseElement {
   endArrowhead: ArrowheadStyle;
   startBinding: Binding | null;
   endBinding: Binding | null;
+  // When true, points are treated only as anchors — the displayed path is
+  // computed at render time as an orthogonal (horizontal/vertical-only) route
+  // between them, flowchart-connector style. See src/canvas/elbow.ts.
+  elbowed: boolean;
 }
 export interface Binding {
   elementId: string;
@@ -110,6 +115,10 @@ export interface ImageElement extends BaseElement {
   dataURL: string;
   crop: ImageCrop | null;
 }
+export interface EmbedElement extends BaseElement {
+  type: "embed";
+  url: string;
+}
 
 export type WhiteboardElement =
   | RectangleElement
@@ -120,7 +129,8 @@ export type WhiteboardElement =
   | LineElement
   | ArrowElement
   | TextElement
-  | ImageElement;
+  | ImageElement
+  | EmbedElement;
 
 export interface AppState {
   tool: ToolType;
@@ -130,10 +140,12 @@ export interface AppState {
   currentTextAlign: TextAlign;
   currentStartArrowhead: ArrowheadStyle;
   currentEndArrowhead: ArrowheadStyle;
+  currentElbowed: boolean;
   selectedIds: string[];
   editingTextId: string | null;
   editingPointsId: string | null;
   croppingId: string | null;
+  interactingEmbedId: string | null;
   scrollX: number;
   scrollY: number;
   zoom: number;

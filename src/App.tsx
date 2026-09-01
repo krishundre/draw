@@ -10,6 +10,8 @@ import { ContextMenu } from "./components/ContextMenu";
 import { CommandPalette } from "./components/CommandPalette";
 import { HelpDialog } from "./components/HelpDialog";
 import { SceneSearch } from "./components/SceneSearch";
+import { AIGenerateDialog } from "./components/AIGenerateDialog";
+import { AISettingsDialog } from "./components/AISettingsDialog";
 import { useStore } from "./state/store";
 import { KEY_TO_TOOL } from "./tools/toolDefs";
 import { newId, randomSeed } from "./utils/id";
@@ -28,6 +30,8 @@ export default function App() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [aiGenerateOpen, setAiGenerateOpen] = useState(false);
+  const [aiSettingsOpen, setAiSettingsOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   useHead(getPageMeta("/"));
@@ -82,6 +86,8 @@ export default function App() {
         setSearchOpen(false);
         setHelpOpen(false);
         setLibraryOpen(false);
+        setAiGenerateOpen(false);
+        setAiSettingsOpen(false);
         setContextMenu(null);
         store.setSelectedIds([]);
         return;
@@ -217,10 +223,24 @@ export default function App() {
       </div>
       <StylePanel />
       <BottomBar />
-      <TopRightBar onOpenLibrary={() => setLibraryOpen((v) => !v)} onOpenHelp={() => setHelpOpen(true)} onOpenSearch={() => setSearchOpen(true)} />
+      <TopRightBar
+        onOpenLibrary={() => setLibraryOpen((v) => !v)}
+        onOpenHelp={() => setHelpOpen(true)}
+        onOpenSearch={() => setSearchOpen(true)}
+        onOpenAIGenerate={() => setAiGenerateOpen(true)}
+      />
       {libraryOpen && <LibraryPanel onClose={() => setLibraryOpen(false)} />}
-      {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} onOpenSearch={() => setSearchOpen(true)} />}
+      {paletteOpen && (
+        <CommandPalette
+          onClose={() => setPaletteOpen(false)}
+          onOpenSearch={() => setSearchOpen(true)}
+          onOpenAIGenerate={() => setAiGenerateOpen(true)}
+          onOpenAISettings={() => setAiSettingsOpen(true)}
+        />
+      )}
       {searchOpen && <SceneSearch onClose={() => setSearchOpen(false)} />}
+      {aiGenerateOpen && <AIGenerateDialog onClose={() => setAiGenerateOpen(false)} onNeedSettings={() => { setAiGenerateOpen(false); setAiSettingsOpen(true); }} />}
+      {aiSettingsOpen && <AISettingsDialog onClose={() => setAiSettingsOpen(false)} onSaved={() => setAiGenerateOpen(true)} />}
       {helpOpen && <HelpDialog onClose={() => setHelpOpen(false)} />}
       {contextMenu && <ContextMenu x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)} />}
       {appState.tutorialOpen && <TutorialOverlay />}

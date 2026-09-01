@@ -116,15 +116,17 @@ One thing found *during* this pass and fixed along the way, unrelated to any sin
 
 ### 🔴 Large / optional (only worth it for head-on competition, not staying lightweight)
 
-1. **Elbow arrows** (orthogonal routing) and **flowchart-specific tooling** — significant new interaction/rendering logic for a narrower use case (technical diagramming) than DrawBoard's general sketching focus.
-2. **Mermaid-to-diagram (TTD) converter** — needs a Mermaid parser + a mapping layer to DrawBoard's element model. *Already flagged as a known gap in README.*
-3. **Web-embed / embeddable iframe elements** — a real security surface (arbitrary iframe embedding) that needs careful sandboxing; not a small addition.
-4. **AI-assisted "wireframe to diagram/code" generation** — requires an AI backend/API integration decision (which model, whose API key, cost model) before any UI work.
-5. **End-to-end encrypted real-time collaboration at scale** — DrawBoard's current Yjs relay is unencrypted and self-hosted-only; real E2EE (matching Excalidraw's) plus a managed hosted relay is an infrastructure project, not a feature PR.
-6. **Localization/i18n** — touches every UI string in the app; a real, ongoing translation-maintenance commitment.
-7. **VS Code extension / npm-embeddable package** — packaging DrawBoard as an embeddable library for other apps is a distribution/API-design project, not a feature.
-8. **Laser pointer** — only meaningful in the context of live presentations during real-time collab, so it's gated behind DrawBoard actually having mature, always-on collaboration first.
-9. **Collaboration-aware undo/redo** — reconciling local undo against concurrent remote edits during multiplayer sessions is a real CRDT-design problem, not a quick fix, and only matters once collaboration is a first-class, always-on feature.
+**Status as of 2026-09-01:** items 1, 3, and 4 were implemented (scoped down as noted below); the rest were explicitly parked per a scoping conversation with the maintainer rather than attempted. See `TESTING-REPORT.md`'s "Large/optional tier" addendum for verification detail.
+
+1. ✅ **Elbow arrows** (orthogonal routing) and **flowchart-specific tooling** — Done, scoped down: the router is a single-bend orthogonal connector (start → one bend → end), not full obstacle-avoidance pathfinding around other shapes in the way. "Flowchart tooling" beyond that is a library preset ("Flowchart: decision") combining bound shapes + elbow arrows, not a dedicated flowchart mode/UI.
+2. **Mermaid-to-diagram (TTD) converter** — Parked (not selected in scoping). Needs a Mermaid parser + a mapping layer to DrawBoard's element model. *Already flagged as a known gap in README.*
+3. ✅ **Web-embed / embeddable iframe elements** — Done, scoped down: restricted to a curated domain allowlist (YouTube, Figma, CodeSandbox, etc.) rather than arbitrary URLs, with a locked-down `sandbox` attribute and pointer-events gated behind an explicit double-click-to-interact step — the security-conscious version of this feature, not a general-purpose iframe-anything tool.
+4. ✅ **AI-assisted "wireframe to diagram/code" generation** — Partially done: text-to-diagram only (describe a flowchart, get real bound/elbow-connected elements), bring-your-own-API-key (OpenAI or Anthropic), fully client-side (no DrawBoard backend). Wireframe-*to-code* generation was not built — that's a materially separate feature (vision input, code-display UI) and doing both within this pass risked doing neither well.
+5. **End-to-end encrypted real-time collaboration at scale** — Parked. DrawBoard's current Yjs relay is unencrypted and self-hosted-only; real E2EE (matching Excalidraw's) plus a managed hosted relay is an infrastructure project, not a feature PR.
+6. **Localization/i18n** — Parked. Touches every UI string in the app; a real, ongoing translation-maintenance commitment.
+7. **VS Code extension / npm-embeddable package** — Parked. Packaging DrawBoard as an embeddable library for other apps is a distribution/API-design project, not a feature.
+8. **Laser pointer** — Parked, per the gap analysis's own reasoning: only meaningful in the context of live presentations during real-time collab, so it's gated behind DrawBoard actually having mature, always-on collaboration first (still opt-in/self-hosted today).
+9. **Collaboration-aware undo/redo** — Parked (not selected in scoping). Reconciling local undo against concurrent remote edits during multiplayer sessions is a real CRDT-design problem, not a quick fix, and only matters once collaboration is a first-class, always-on feature.
 
 ---
 

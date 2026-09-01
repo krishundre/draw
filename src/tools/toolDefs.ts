@@ -19,6 +19,7 @@ export const TOOLS: ToolDef[] = [
   { type: "draw", label: "Draw", key: "7", icon: "draw" },
   { type: "text", label: "Text", key: "8", icon: "text" },
   { type: "image", label: "Image", key: "9", icon: "image" },
+  { type: "embed", label: "Embed", key: "W", icon: "embed" },
   { type: "eraser", label: "Eraser", key: "0", icon: "eraser" },
   { type: "frame", label: "Frame", key: "F", icon: "frame" },
 ];
@@ -42,6 +43,7 @@ export const KEY_TO_TOOL: Record<string, ToolType> = {
   "8": "text",
   t: "text",
   "9": "image",
+  w: "embed",
   "0": "eraser",
   e: "eraser",
   f: "frame",

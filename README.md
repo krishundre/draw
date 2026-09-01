@@ -11,7 +11,8 @@ An open-source, self-hostable whiteboard inspired by [Excalidraw](https://excali
 
 ## Features
 
-- **13 tools**: selection, lasso (freeform selection), rectangle, diamond, ellipse, arrow (5 arrowhead styles per end, with arrow-to-shape binding), line, freehand draw, text, image insert (with in-editor cropping), eraser, frame, hand/pan — with the same keyboard shortcuts as Excalidraw.
+- **14 tools**: selection, lasso (freeform selection), rectangle, diamond, ellipse, arrow (5 arrowhead styles per end, with arrow-to-shape binding and an optional elbow/orthogonal flowchart-connector mode), line, freehand draw, text, image insert (with in-editor cropping), web-embed (YouTube/Figma/CodeSandbox/etc., from a curated allowlist), eraser, frame, hand/pan — with the same keyboard shortcuts as Excalidraw.
+- **AI-generated diagrams** (bring your own OpenAI or Anthropic API key): describe a flowchart in plain text and get real, bound, elbow-connected shapes dropped onto the canvas. Your key is stored only in your browser and sent straight to the provider — DrawBoard has no backend involved.
 - **Full styling**: stroke & background color (presets + custom picker), fill style (hachure / cross-hatch / solid), stroke width & style, sloppiness (architect / artist / cartoonist), sharp or round edges, opacity, font family/size/alignment.
 - **Selection & transform**: multi-select, 8-handle resize, rotate, group/ungroup, lock, layering (front/back/forward/backward), duplicate, arrow-key nudging, align (left/right/center/top/bottom/middle) and distribute (horizontal/vertical).
 - **Arrow-to-shape binding**: arrows started or ended on a rectangle/diamond/ellipse snap to its edge and stay attached as the shape moves, resizes, gets nudged, aligned, or distributed.
@@ -75,11 +76,15 @@ The server doesn't persist anything itself — each browser keeps its own full c
 
 ## Known limitations
 
-- No Mermaid-to-diagram converter, laser pointer, or lasso for anything other than element selection (no freeform draw-a-mask tool).
+- No Mermaid-to-diagram converter or laser pointer.
+- The elbow-arrow router is a single-bend orthogonal connector (start → bend → end), not full obstacle-avoidance pathfinding — it won't route *around* shapes in its way, just between two points.
+- Web-embed elements are restricted to a curated allowlist of known services (YouTube, Vimeo, Figma, CodeSandbox, CodePen, Google Docs/Maps, Loom, Spotify, GitHub Gist, Notion, Observable) rather than arbitrary URLs — a deliberate security tradeoff, see `src/utils/embedAllowlist.ts`.
+- AI diagram generation only goes text-to-diagram, not the reverse (wireframe-to-code); it's bring-your-own-API-key only (OpenAI or Anthropic), so it needs a key you provide and pay for, and OpenAI's API may reject direct-from-browser calls depending on their current CORS policy (Anthropic explicitly supports it) — not independently verified against a live key in this repo's own testing, see `TESTING-REPORT.md`.
 - Frames are visual/organizational only — moving a frame doesn't drag its contents yet.
 - Image cropping uses a simplified model: dragging an edge/corner trims the displayed box directly (rather than showing the full source image faded behind a movable crop window), and dragging inside the box pans which part of the source shows through at the box's current size. Real and useful, just not a full Photoshop-style windowed crop UI.
 - The DrawBoard JSON export format (`type: "drawboard"`) is its own schema, not byte-for-byte compatible with real `.excalidraw` files, even though both are plain JSON — this is a deliberate scope decision, not a bug (see the gap analysis linked below if you're curious why).
 - The public demo runs single-user only (see above); self-host `server/` if you want live collaboration.
+- End-to-end encrypted collaboration at scale, localization/i18n, a VS Code extension / embeddable npm package, a laser pointer, and collaboration-aware undo/redo are all explicitly parked — see `GAP-ANALYSIS.md`'s Large/optional tier.
 
 For a detailed comparison against Excalidraw — what's implemented, what's deliberately out of scope, and why — see [`GAP-ANALYSIS.md`](GAP-ANALYSIS.md).
 

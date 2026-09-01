@@ -3,7 +3,8 @@ import { useStore } from "../state/store";
 import { newId, randomSeed } from "../utils/id";
 import { useAdaptiveContrast } from "../theme/useAdaptiveContrast";
 import { copyElementsToClipboard, readElementsFromClipboard } from "../utils/clipboard";
-import type { ImageElement } from "../types";
+import type { EmbedElement, ImageElement } from "../types";
+import { isEmbeddableUrl } from "../utils/embedAllowlist";
 
 export function ContextMenu({ x, y, onClose }: { x: number; y: number; onClose: () => void }) {
   // The menu grew a lot of extra rows (align/distribute/link/copy/paste) on
@@ -173,6 +174,34 @@ export function ContextMenu({ x, y, onClose }: { x: number; y: number; onClose: 
           }}
         >
           Reset crop
+        </button>
+      )}
+      {selected.length === 1 && selected[0].type === "embed" && (
+        <button
+          onClick={() => {
+            const current = (selected[0] as EmbedElement).url;
+            const url = prompt("Embed URL:", current);
+            onClose();
+            if (!url || url === current) return;
+            if (!isEmbeddableUrl(url)) {
+              alert("That URL isn't on the allowed list of embeddable sites.");
+              return;
+            }
+            updateElement(selected[0].id, { url } as Partial<EmbedElement>);
+            commitHistory();
+          }}
+        >
+          Edit embed URL
+        </button>
+      )}
+      {selected.length === 1 && selected[0].type === "embed" && (
+        <button
+          onClick={() => {
+            setAppState({ interactingEmbedId: selected[0].id });
+            onClose();
+          }}
+        >
+          Interact with embed
         </button>
       )}
       <div className="dropdown-sep" />

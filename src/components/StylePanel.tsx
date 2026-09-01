@@ -167,6 +167,25 @@ export function StylePanel() {
               ))}
             </select>
           </div>
+          <label className="dropdown-row" style={{ padding: "6px 0" }}>
+            Elbow (flowchart connector)
+            <input
+              type="checkbox"
+              checked={arrowEl?.elbowed ?? appState.currentElbowed}
+              onChange={(e) => {
+                const v = e.target.checked;
+                if (arrowEl) {
+                  // Collapse to just the anchor points when turning elbow on —
+                  // any manually-placed bends stop applying once the router
+                  // takes over, so keeping them around would be dead state.
+                  const points = v ? [arrowEl.points[0], arrowEl.points[arrowEl.points.length - 1]] : arrowEl.points;
+                  updateElements([arrowEl.id], { elbowed: v, points } as never);
+                  store.commitHistory();
+                }
+                setAppState({ currentElbowed: v });
+              }}
+            />
+          </label>
         </Section>
       )}
 
