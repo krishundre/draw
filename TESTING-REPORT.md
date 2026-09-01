@@ -75,6 +75,18 @@ Re-ran the core regression set after all of the above (draw, undo/redo, `Ctrl+A`
 
 ---
 
+## Addendum: Menu dropdown / style panel overlap (2026-09-01, user-reported)
+
+The maintainer reported (with a screenshot, dark theme + black canvas background) that opening the hamburger Menu while an element was selected produced illegible overlapping text — two separate glass panels' content blending together.
+
+| ID | Phase | Severity | Summary | Steps to reproduce | Status |
+|----|-------|----------|---------|---------------------|--------|
+| BUG-10 | User-reported | Major | The Menu dropdown and the style panel are both positioned to appear in the same spot (flush left, right below the toolbar row) — whenever both are open at once, their translucent glass backgrounds overlap into illegible blended text | Select any element (or activate a drawing tool) so the style panel shows, then open the hamburger Menu. `MenuBar.tsx`'s dropdown (`.dropdown`, `top: 48px` relative to the toolbar row) and `.style-panel` (`top: 12px; margin-top: 58px`, same left edge) occupy near-identical screen space. Theme-independent — dark mode / black canvas just made the bleed-through easier to notice, not the cause. | **Fixed** — the dropdown now measures the style panel's actual rendered bottom edge (if present) after mount and repositions itself below it instead of overlapping, with its own scroll/max-height so it stays reachable even on short viewports; when the style panel isn't showing, it opens at its original default position, unchanged. |
+
+Verified live: reproduced the exact reported scenario (dark theme, black canvas background, selected diamond) — dropdown now opens below the style panel with no overlap. Confirmed the no-selection case (style panel absent) still opens at the original position. `npx tsc --noEmit` clean.
+
+---
+
 ## 🚨 Security issues
 
 **No XSS, injection, or exposed-secret vulnerabilities found.** Specifically tested/verified:

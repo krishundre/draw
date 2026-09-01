@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "../state/store";
 import { Icon } from "./Icon";
 import { downloadFile, exportToJSON, exportToPNG, exportToSVG, copyPNGToClipboard, parseImportedFile } from "../utils/export";
@@ -11,6 +11,27 @@ export function MenuBar() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const wrap = useAdaptiveContrast<HTMLDivElement>();
   const menu = useAdaptiveContrast<HTMLDivElement>(open);
+  // The style panel lives in this same corner (below the toolbar row, flush
+  // left) whenever a tool is active or something's selected — which overlaps
+  // this dropdown's default position exactly, and two translucent glass
+  // panels stacked on each other just blend into illegible overlapping text.
+  // Shift the dropdown below the style panel's actual rendered bottom edge
+  // (if present) rather than a fixed guess, since its height varies with
+  // content (arrowheads/font sections, how many elements are selected, etc).
+  const menuBoxRef = useRef<HTMLDivElement>(null);
+  const [dropdownTop, setDropdownTop] = useState<number | null>(null);
+  useEffect(() => {
+    if (!open) {
+      setDropdownTop(null);
+      return;
+    }
+    const stylePanel = document.querySelector(".style-panel");
+    if (!stylePanel) return;
+    const rect = stylePanel.getBoundingClientRect();
+    const wrapRect = menuBoxRef.current?.parentElement?.getBoundingClientRect();
+    if (!wrapRect || rect.bottom <= wrapRect.top) return; // no overlap — default position is fine
+    setDropdownTop(rect.bottom - wrapRect.top + 8);
+  }, [open]);
 
   const hasSelection = appState.selectedIds.length > 0;
   const exportElements = useMemo(
@@ -73,7 +94,15 @@ export function MenuBar() {
         <Icon name="menu" />
       </button>
       {open && (
-        <div className="dropdown" ref={menu.ref} data-bg={menu.background ?? undefined}>
+        <div
+          className="dropdown"
+          style={dropdownTop !== null ? { top: dropdownTop, maxHeight: `calc(100vh - ${dropdownTop + 16}px)`, overflowY: "auto" } : undefined}
+          ref={(node) => {
+            menuBoxRef.current = node;
+            menu.ref.current = node;
+          }}
+          data-bg={menu.background ?? undefined}
+        >
           <button onClick={openImport}>Open .excalidraw file…</button>
           <button onClick={handleExportJSON}>Save as .excalidraw (JSON)</button>
           <div className="dropdown-sep" />
