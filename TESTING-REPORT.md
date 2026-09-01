@@ -85,6 +85,14 @@ The maintainer reported (with a screenshot, dark theme + black canvas background
 
 Verified live: reproduced the exact reported scenario (dark theme, black canvas background, selected diamond) — dropdown now opens below the style panel with no overlap. Confirmed the no-selection case (style panel absent) still opens at the original position. `npx tsc --noEmit` clean.
 
+## Addendum: Docs pages weren't scrollable (2026-09-01, user-reported)
+
+| ID | Phase | Severity | Summary | Steps to reproduce | Status |
+|----|-------|----------|---------|---------------------|--------|
+| BUG-11 | User-reported | Major | Any `/docs/*` page longer than one screenful was unreachable past the fold — no scrollbar, no way to see the rest of the content | Visit any docs page whose content is taller than the viewport, e.g. `/docs/getting-started`, and try to scroll. `style.css`'s global `html, body, #app { overflow: hidden }` rule — added for the whiteboard app, which needs a fixed non-scrolling viewport since the canvas handles its own pan/zoom — is loaded for the *entire* single-page app, including the `/docs` routes, which are a normal document expecting to scroll. | **Fixed** — moved the `overflow: hidden` containment onto `.app-root` itself (which already independently declared `position: absolute; inset: 0; overflow: hidden` — the global rule was redundant for the whiteboard route in the first place), and removed it from the global `html`/`body`/`#app` rule. |
+
+Verified live: docs pages now scroll normally (confirmed via `/docs/getting-started` at both desktop and 375px mobile widths — content below the fold is reachable). Confirmed no regression on the whiteboard app itself: `document.body.scrollHeight` still exactly equals `window.innerHeight` (no stray page scroll introduced), and `.app-root`'s own `overflow: hidden` is intact. `npx tsc --noEmit` clean.
+
 ---
 
 ## 🚨 Security issues

@@ -75,12 +75,16 @@ body,
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden;
   font-family: "Segoe UI", system-ui, sans-serif;
   color: var(--text);
   background: var(--bg);
 }
 
+/* The whiteboard route needs a fixed, non-scrolling viewport (the canvas
+   handles its own pan/zoom) — that containment lives here on .app-root
+   itself, not globally on html/body/#app, since this stylesheet is shared
+   by the /docs routes too, which are a normal scrolling document and were
+   otherwise unreachable past one screenful of content. */
 .app-root {
   position: absolute;
   inset: 0;
