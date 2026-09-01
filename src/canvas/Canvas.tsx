@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useStore } from "../state/store";
 import { renderScene, getCachedImage } from "./render";
 import { createElement, createEmbedElement } from "./factory";
-import { isEmbeddableUrl } from "../utils/embedAllowlist";
+import { isEmbeddableUrl, normalizeEmbedUrl } from "../utils/embedAllowlist";
 import {
   getCombinedBounds,
   getResizeHandles,
@@ -487,11 +487,12 @@ export function Canvas() {
     }
 
     if (appState.tool === "embed") {
-      const url = prompt(
+      const raw = prompt(
         "Paste a URL to embed (YouTube, Vimeo, Figma, CodeSandbox, CodePen, Google Docs/Maps, Loom, Spotify, GitHub Gist, Notion, or Observable):"
       );
       setTool("selection");
-      if (!url) return;
+      if (!raw) return;
+      const url = normalizeEmbedUrl(raw);
       if (!isEmbeddableUrl(url)) {
         alert("That URL isn't on the allowed list of embeddable sites — for security, DrawBoard only embeds a curated set of known services.");
         return;

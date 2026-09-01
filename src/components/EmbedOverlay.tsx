@@ -33,7 +33,15 @@ export function EmbedOverlay({
             src={el.url}
             title={el.url}
             sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
-            referrerPolicy="no-referrer"
+            // "no-referrer" seemed like the more private default, but several
+            // embeddable services (YouTube among them) actually use the
+            // referrer/origin to validate the embedding context — stripping
+            // it entirely made otherwise-embeddable videos fail with a
+            // generic player error. "strict-origin-when-cross-origin" is the
+            // browser's own normal default (send just the origin cross-site,
+            // nothing on downgrade) — what embedding a page normally does
+            // when you don't override it at all.
+            referrerPolicy="strict-origin-when-cross-origin"
             style={{
               position: "absolute",
               left: el.x * zoom + scrollX,

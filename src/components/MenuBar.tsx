@@ -17,7 +17,12 @@ export function MenuBar() {
   // panels stacked on each other just blend into illegible overlapping text.
   // Shift the dropdown below the style panel's actual rendered bottom edge
   // (if present) rather than a fixed guess, since its height varies with
-  // content (arrowheads/font sections, how many elements are selected, etc).
+  // content (arrowheads/font sections, how many elements are selected, etc) —
+  // and keep re-measuring for as long as the menu stays open, not just once
+  // at the moment it opens: the style panel can appear, disappear, or change
+  // height *while* the menu is already open (switching tools, changing the
+  // selection, a longer/shorter set of style sections), and a one-shot
+  // measurement goes stale the moment any of that happens.
   const menuBoxRef = useRef<HTMLDivElement>(null);
   const [dropdownTop, setDropdownTop] = useState<number | null>(null);
   useEffect(() => {
@@ -25,12 +30,46 @@ export function MenuBar() {
       setDropdownTop(null);
       return;
     }
-    const stylePanel = document.querySelector(".style-panel");
-    if (!stylePanel) return;
-    const rect = stylePanel.getBoundingClientRect();
-    const wrapRect = menuBoxRef.current?.parentElement?.getBoundingClientRect();
-    if (!wrapRect || rect.bottom <= wrapRect.top) return; // no overlap — default position is fine
-    setDropdownTop(rect.bottom - wrapRect.top + 8);
+    const resizeObserver = new ResizeObserver(recompute);
+    const observedRef: { current: Element | null } = { current: null };
+    function recompute() {
+      const wrapRect = menuBoxRef.current?.parentElement?.getBoundingClientRect();
+      const stylePanel = document.querySelector(".style-panel");
+      // Keep the ResizeObserver pointed at whichever style panel element
+      // currently exists — it can be unmounted/remounted (a fresh DOM node)
+      // whenever the tool/selection state toggles it on and off, and only
+      // observing whatever's live right now catches height changes within
+      // that state (e.g. a longer set of style sections for one element type
+      // vs another) that a one-time `observe()` call would miss.
+      if (stylePanel !== observedRef.current) {
+        if (observedRef.current) resizeObserver.unobserve(observedRef.current);
+        if (stylePanel) resizeObserver.observe(stylePanel);
+        observedRef.current = stylePanel;
+      }
+      if (!wrapRect || !stylePanel) {
+        setDropdownTop(null);
+        return;
+      }
+      const rect = stylePanel.getBoundingClientRect();
+      if (rect.bottom <= wrapRect.top) {
+        setDropdownTop(null); // no overlap — default position is fine
+        return;
+      }
+      setDropdownTop(rect.bottom - wrapRect.top + 8);
+    }
+    recompute();
+    // The style panel mounting/unmounting (tool switched to/from selection,
+    // selection cleared/made) is a DOM change ResizeObserver alone won't
+    // catch since there's nothing to observe before it exists — watch for
+    // that via MutationObserver on a stable ancestor instead.
+    const mutationObserver = new MutationObserver(recompute);
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("resize", recompute);
+    return () => {
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+      window.removeEventListener("resize", recompute);
+    };
   }, [open]);
 
   const hasSelection = appState.selectedIds.length > 0;

@@ -52,7 +52,11 @@ export function StylePanel() {
   const hasSelection = selected.length > 0;
   const style: ElementStyle = hasSelection ? selected[0] : appState.currentStyle;
 
-  const showPanel = appState.tool !== "selection" || hasSelection;
+  // Hand (pan) and Eraser don't create or style anything, so showing a full
+  // stroke/fill/sloppiness panel for them is just noise with nothing to act
+  // on — only tools that actually draw a styleable element open the panel.
+  const NON_STYLING_TOOLS = ["selection", "hand", "eraser", "lasso"];
+  const showPanel = !NON_STYLING_TOOLS.includes(appState.tool) || hasSelection;
   const { ref: glassRef, background } = useAdaptiveContrast<HTMLDivElement>(showPanel);
   if (!showPanel) return null;
 

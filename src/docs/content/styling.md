@@ -46,6 +46,8 @@ A slider from 0–100% controlling how see-through the element is.
 
 Shown when the **Arrow** tool is active or an arrow is selected. Set the start and end independently — each can be **none**, **arrow**, **triangle**, **dot**, or **bar**. This is how you make a plain connector, a one-way arrow, a two-way arrow, or a line with end-caps.
 
+Right below that is an **Elbow (flowchart connector)** checkbox — turn it on to route the arrow as clean right-angle horizontal/vertical bends instead of a straight diagonal line, the classic flowchart-connector look. Turning it on collapses any manually-placed bend points, since the router takes over the path from there.
+
 ## Text options
 
 Shown when the **Text** tool is active or a text element is selected:

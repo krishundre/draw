@@ -4,7 +4,7 @@ import { newId, randomSeed } from "../utils/id";
 import { useAdaptiveContrast } from "../theme/useAdaptiveContrast";
 import { copyElementsToClipboard, readElementsFromClipboard } from "../utils/clipboard";
 import type { EmbedElement, ImageElement } from "../types";
-import { isEmbeddableUrl } from "../utils/embedAllowlist";
+import { isEmbeddableUrl, normalizeEmbedUrl } from "../utils/embedAllowlist";
 
 export function ContextMenu({ x, y, onClose }: { x: number; y: number; onClose: () => void }) {
   // The menu grew a lot of extra rows (align/distribute/link/copy/paste) on
@@ -180,9 +180,10 @@ export function ContextMenu({ x, y, onClose }: { x: number; y: number; onClose: 
         <button
           onClick={() => {
             const current = (selected[0] as EmbedElement).url;
-            const url = prompt("Embed URL:", current);
+            const raw = prompt("Embed URL:", current);
             onClose();
-            if (!url || url === current) return;
+            if (!raw || raw === current) return;
+            const url = normalizeEmbedUrl(raw);
             if (!isEmbeddableUrl(url)) {
               alert("That URL isn't on the allowed list of embeddable sites.");
               return;

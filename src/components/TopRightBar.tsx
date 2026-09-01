@@ -66,7 +66,7 @@ export function TopRightBar({
       <button className="tool-btn" title="Search elements (Ctrl+Shift+F)" onClick={onOpenSearch}>
         <Icon name="search" />
       </button>
-      <button className="tool-btn" title="Generate diagram (AI, bring your own API key)" onClick={onOpenAIGenerate}>
+      <button className="tool-btn" title="Generate diagram (AI, bring your own API key)" onClick={onOpenAIGenerate} data-tutorial="ai-generate">
         ✨
       </button>
       <button className="tool-btn" title="Toggle theme" onClick={toggleTheme}>

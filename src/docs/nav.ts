@@ -9,6 +9,7 @@ export const DOCS_NAV: DocPage[] = [
   { slug: "styling", title: "Styling Elements" },
   { slug: "canvas-basics", title: "Canvas Basics" },
   { slug: "libraries", title: "Libraries" },
+  { slug: "ai-generation", title: "AI Diagram Generation" },
   { slug: "import-export", title: "Import / Export" },
   { slug: "saving", title: "Saving Your Work" },
   { slug: "shortcuts", title: "Keyboard Shortcuts" },
