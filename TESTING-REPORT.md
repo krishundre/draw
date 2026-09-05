@@ -108,6 +108,55 @@ Verified live: confirmed the Hand and Lasso tools no longer open the style panel
 
 ---
 
+## Addendum: Save file renamed .excalidraw → .drawdp (2026-09-01, user-requested)
+
+The maintainer asked for the main save/export file to use a distinct `.drawdp` extension instead of `.excalidraw`, since the two formats were never actually compatible (own `type: "drawboard"` JSON schema) and the shared extension implied otherwise.
+
+- `MenuBar.tsx`: download filename changed to `drawing.drawdp`; menu labels updated ("Open .drawdp file…" / "Save as .drawdp (JSON)"); the file-picker's `accept` attribute now lists `.drawdp,.excalidraw,.json` — old files saved before this rename still open normally, nothing breaks for existing users.
+- Updated `README.md`, `GAP-ANALYSIS.md`, and the `/docs` pages (`import-export.md`, `saving.md`) to match. Library files (`.excalidrawlib`) were intentionally left untouched — out of scope for this request.
+
+Verified live: confirmed the menu labels read `.drawdp`, captured the actual `download` attribute on the generated file (`drawing.drawdp`), and confirmed a file saved with the old `.excalidraw` extension still imports without error. `npx tsc --noEmit` clean.
+
+---
+
+## Addendum: Full end-to-end re-test of every feature (2026-09-02)
+
+A complete re-test of the whole app, requested explicitly by the maintainer ("complete testing of the project, with all options and all possible conditions") — not scoped to any one feature, covering everything built across every pass so far, on the local dev build. `npx tsc --noEmit` and `npm run build` both pass clean before and after the one fix this pass produced.
+
+**Tutorial (7 steps):** fresh-profile load correctly shows "Step 1 of 7"; stepped through all 7 via the component's own keyboard navigation (ArrowRight), confirming each step's title/target in order (Welcome → Pick a tool → Style what you draw → Or let AI draw it → Quick actions → Docs & feedback → You're set) and that the final step's "Done" (`isLast`) correctly closes the tutorial and persists `hasSeenTutorial` (doesn't reappear on reload). Note: clicking "Next" via screenshot-derived coordinates was flaky during this pass — the tooltip animates to each new position over 220ms (`transition: left/top 0.22s`), and a screenshot-then-programmatic-click round trip can land after it's moved; a real user's mouse doesn't chase a stale screenshot coordinate, so this is a testing-harness artifact, not a product bug. Keyboard navigation (ArrowRight/ArrowLeft/Enter/Escape/Tab-trap) is unaffected and was used for the reliable re-test.
+
+**Kitchen-sink scene (one of every element type together):** built a scene with rectangle, diamond, ellipse, frame, line, elbow-bound arrow, freehand draw, plain text, container-bound text, image, and embed — all 11 render correctly together. Cross-feature checks against this same scene, all passing:
+- **Export**: PNG produces a valid non-empty blob; SVG contains real `<path>` geometry, the embed placeholder, and a raster `<image>` tag (not a single flattened image); JSON round-trips all 11 elements with the `"drawboard"` type discriminator intact.
+- **Align + undo/redo**: select-all → align-top → every element's Y matches except the bound text (correctly re-centers relative to its container, not force-aligned itself) → undo restores exact original Y values → redo restores the aligned state including the bound-text recenter. Confirms `syncBoundArrows`/`syncBoundText` compose correctly with align and with history.
+- **Library save/insert with mixed bindings**: saved a rect+bound-text+arrow+diamond subset to "My library", reopened, inserted it — confirmed the ID-remap fix (BUG-09) generalizes correctly to bound **text** as well as bound arrows (the new clone's `containerId` and the new arrow's `startBinding`/`endBinding` all point at the freshly-minted IDs, not the original library-item IDs).
+- **Scene search**: found "Kitchen sink test" by text, clicking it correctly selected and scrolled to it.
+
+**Command palette:** every entry render-checked via the DOM (all align/distribute/copy/paste/elbow-toggle/search/AI entries present, nothing missing or duplicated); executed "Toggle elbow" and a search command directly, no console errors.
+
+**Edge cases, verified via direct function calls (not just UI):**
+- Elbow router: vertical (`dx=0`), horizontal (`dy=0`), both diagonal directions, and a zero-length (same start/end point) case — all return sane point arrays, no crash.
+- Lasso polygon: 0/1/2-point "polygons" correctly return `false` (guarded, no crash) rather than false-accepting a degenerate shape; a real ≥3-point polygon correctly includes/excludes elements by actual containment.
+- Embed URL handling: malformed URL passthrough (no throw), Vimeo watch-link normalization, an already-correct embed URL left unchanged, a bare `youtube.com` domain (no video ID) still passes the domain allowlist check (a known, accepted limitation of domain-level — not path-level — allowlisting), a disallowed domain, a `data:` URL, and a `javascript:` URL are all correctly rejected.
+- Clipboard: copying an empty selection returns `false` without throwing; reading with clipboard permission denied (this sandbox's actual state) returns `null` gracefully, never throws.
+- Malformed import files: invalid JSON, JSON missing `elements`, and `elements` not being an array all throw catchable, clearly-worded errors (matching the existing `alert()` handler) — no regression from the SVG-exporter changes earlier this session.
+- AI generation network failure: mocked `fetch` to reject — the dialog shows "Failed to fetch" inline and stays open/usable, no uncaught errors, no elements incorrectly added.
+- Disallowed embed URL through the real UI (tool → click → prompt → reject) — confirmed the alert fires and no element is created.
+- Image crop: entry auto-initializes to the full natural image size; dragging an edge trims both the display box and the natural-space crop rect by the exact expected ratio (verified the arithmetic, not just "something changed"); Enter applies and persists; a second crop session's Escape correctly reverts to the value from *when that session started*, not to null or to whatever was mid-drag. **Follow-up, cleanly re-confirmed:** built a 4-quadrant (red/blue/green/yellow) test image specifically to make panning visible, trimmed the crop window to half-width, then dragged inside the box — the display box (`x`/`y`/`width`/`height`) stayed completely fixed while only `crop.x` moved, by the exact expected amount (a 50px world-space drag at 2x scale → `crop.x` +25); a further drag past the source image's edge correctly clamped at the maximum instead of going out of bounds, confirmed both numerically and visually (the crop window showed a red/green-blue/yellow mix mid-pan, then pure blue/yellow once clamped at the edge, exactly matching the math). The earlier ambiguity really was test-tooling event-ordering noise from rapid back-to-back calls, not a product issue.
+- Lasso via a real dispatched drag path: correctly selected only elements geometrically inside the traced polygon.
+- Pinch-zoom regression: simulated two-finger spread from 100px to 200px apart produced exactly 2.0x zoom — no regression from any of this session's other changes.
+
+**Found and fixed — real bug:**
+
+| ID | Phase | Severity | Summary | Steps to reproduce | Status |
+|----|-------|----------|---------|---------------------|--------|
+| BUG-14 | Full re-test | Major (data loss) | `Alt+Backspace` while point-editing a line/arrow (meant to remove just the last point) also deleted the **entire element**, because `App.tsx`'s global Delete/Backspace handler has no Alt-modifier check and fired on the same keydown | Double-click a line/arrow to enter point-edit mode, add an extra point or two, press `Alt+Backspace`. The point-editor's own handler (`Canvas.tsx`) correctly removed the last point, but the *same* keydown also reached the app-wide "delete selected elements" handler, which deletes on any bare Delete/Backspace with no modifier check — wiping the element a moment later. | **Fixed** — `App.tsx`'s global handler now skips deletion specifically for `Backspace` + `Alt` while `editingPointsId` is set, leaving that combo exclusively to the point-editor. Verified: Alt+Backspace now only removes the last point (element persists); a plain Backspace with no Alt modifier and no active point-edit session still deletes the element normally (no regression). |
+
+Also specifically checked for the *same class* of bug (an unguarded global key handler colliding with a mode-specific one) at every other Escape/Enter overlap in the app (multipoint create, crop mode, point-edit's own Escape) — none of those are destructive when both fire (worst case, the global handler also clears selection or closes an already-closing dialog), so BUG-14 was the one genuine case.
+
+No other bugs found in this pass. Every feature added across the session's prior work — Phase 1 (binding, editable stats, align/distribute, clipboard, export-selection, hyperlinks), Phase 2 (vector SVG, bound-text reflow, multi-point editing, lasso, search, crop, library tabs), the Large tier (elbow arrows, web-embeds, AI generation), and the four follow-up bug-fix rounds — held up under this pass with no regressions.
+
+---
+
 ## 🚨 Security issues
 
 **No XSS, injection, or exposed-secret vulnerabilities found.** Specifically tested/verified:

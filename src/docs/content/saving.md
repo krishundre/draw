@@ -15,8 +15,8 @@ Your drawing lives **only in this browser, on this device.** That's genuinely pr
 
 ## Backing up or moving a drawing
 
-To keep a drawing safe, or move it to another device, export it as a file: open the menu (☰) → **Save as .excalidraw (JSON)**. That downloads a `.excalidraw` file you can store anywhere (cloud drive, email to yourself, etc.) and re-open later with **Open .excalidraw file…** — on this device or any other. See [Import / Export](/docs/import-export) for the other export formats (PNG, SVG).
+To keep a drawing safe, or move it to another device, export it as a file: open the menu (☰) → **Save as .drawdp (JSON)**. That downloads a `.drawdp` file you can store anywhere (cloud drive, email to yourself, etc.) and re-open later with **Open .drawdp file…** — on this device or any other. See [Import / Export](/docs/import-export) for the other export formats (PNG, SVG).
 
 ## If you want sync across devices
 
-DrawBoard's optional real-time collaboration mode (see the **Share** button, when enabled) keeps a drawing in sync between browsers connected to the same session — that's the closest thing to cross-device sync it currently offers. Otherwise, exporting/importing `.excalidraw` files is the way to move a drawing between devices.
+DrawBoard's optional real-time collaboration mode (see the **Share** button, when enabled) keeps a drawing in sync between browsers connected to the same session — that's the closest thing to cross-device sync it currently offers. Otherwise, exporting/importing `.drawdp` files is the way to move a drawing between devices.

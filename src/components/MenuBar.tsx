@@ -111,7 +111,7 @@ export function MenuBar() {
   }
 
   function handleExportJSON() {
-    downloadFile(exportToJSON(elements, appState.canvasBackground), "drawing.excalidraw");
+    downloadFile(exportToJSON(elements, appState.canvasBackground), "drawing.drawdp");
     setOpen(false);
   }
 
@@ -142,8 +142,8 @@ export function MenuBar() {
           }}
           data-bg={menu.background ?? undefined}
         >
-          <button onClick={openImport}>Open .excalidraw file…</button>
-          <button onClick={handleExportJSON}>Save as .excalidraw (JSON)</button>
+          <button onClick={openImport}>Open .drawdp file…</button>
+          <button onClick={handleExportJSON}>Save as .drawdp (JSON)</button>
           <div className="dropdown-sep" />
           <label className="dropdown-row">
             Export selection only
@@ -173,7 +173,8 @@ export function MenuBar() {
           </button>
         </div>
       )}
-      <input ref={fileInputRef} type="file" accept=".excalidraw,.json" style={{ display: "none" }} onChange={onImportFile} />
+      {/* .excalidraw stays accepted for backward compatibility with files saved before the .drawdp rename */}
+      <input ref={fileInputRef} type="file" accept=".drawdp,.excalidraw,.json" style={{ display: "none" }} onChange={onImportFile} />
     </div>
   );
 }

@@ -151,6 +151,12 @@ export default function App() {
         return;
       }
       if (e.key === "Delete" || e.key === "Backspace") {
+        // Alt+Backspace is reserved by the point-editor (Canvas.tsx) for
+        // removing the last point of a line/arrow currently being
+        // point-edited — without this guard, that same keydown also reaches
+        // this global handler and deletes the whole element out from under
+        // the point-editor a moment later.
+        if (e.key === "Backspace" && e.altKey && appState.editingPointsId) return;
         if (appState.selectedIds.length) {
           e.preventDefault();
           store.deleteElements(appState.selectedIds);

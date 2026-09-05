@@ -78,7 +78,7 @@ One thing found *during* this pass and fixed along the way, unrelated to any sin
 | `.excalidrawlib` import/export | ✅ | ✅ | Parity on the format name/shape. |
 | Export to PNG | ✅ | ✅ | Parity. |
 | **Export to true vector SVG** | ✅ | ⚠️ | DrawBoard's "SVG export" rasterizes to PNG and wraps it in an `<svg>` tag — not real vector output. Documented limitation. |
-| Export to native JSON | ✅ (`.excalidraw`, a documented open format) | ✅ (own `type: "drawboard"` JSON, not cross-compatible with real `.excalidraw` files) | A real Excalidraw file can't be opened in DrawBoard and vice versa — different, incompatible JSON schemas despite both being "open JSON export." |
+| Export to native JSON | ✅ (`.excalidraw`, a documented open format) | ✅ (own `type: "drawboard"` JSON, saved as `.drawdp` — not cross-compatible with real `.excalidraw` files) | A real Excalidraw file can't be opened in DrawBoard and vice versa — different, incompatible JSON schemas despite both being "open JSON export." The distinct file extension (renamed from an earlier `.excalidraw` choice) makes that incompatibility obvious at a glance instead of implying compatibility that doesn't exist. |
 | **Export selection only** (vs. whole canvas) | ✅ | ❌ | DrawBoard's PNG/SVG export always exports every element; no "export just what's selected" option. |
 | Copy-to-clipboard as image | ✅ | ✅ (code path correct; not independently re-verified live due to automated-browser clipboard permission limits — see `TESTING-REPORT.md`) | |
 | Autosave / local-first persistence | ✅ (localStorage) | ✅ (IndexedDB via Yjs) | Parity in spirit; different storage mechanism. |

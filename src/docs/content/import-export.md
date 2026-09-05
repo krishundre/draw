@@ -4,7 +4,7 @@ Open the menu (☰ icon, top-left) for every import/export option.
 
 ## Exporting
 
-- **Save as .excalidraw (JSON)** — saves your whole drawing as a `.excalidraw` file (DrawBoard's own JSON schema, not byte-for-byte compatible with a real Excalidraw file even though both are plain JSON). This is the format to use if you want to re-open and keep editing the drawing later, or hand it to someone else using DrawBoard. See [Saving Your Work](/docs/saving).
+- **Save as .drawdp (JSON)** — saves your whole drawing as a `.drawdp` file (DrawBoard's own JSON schema — not a real Excalidraw file, even though both are plain JSON; the distinct extension makes that clear at a glance). This is the format to use if you want to re-open and keep editing the drawing later, or hand it to someone else using DrawBoard. See [Saving Your Work](/docs/saving).
 - **Export as PNG (1x)** — a standard-resolution image with your canvas background included.
 - **Export as PNG (2x, transparent)** — a sharper, higher-resolution image with a transparent background — good for pasting into slides or documents.
 - **Export as SVG** — a real, true vector SVG: shapes come out as actual `<path>`/`<text>` elements you can edit in any vector tool (Illustrator, Figma, Inkscape), not a flattened image wrapped in an `<svg>` tag. Embedded images and web-embeds still export as a raster/placeholder respectively, since there's no vector source to recover for those.
@@ -13,7 +13,7 @@ Open the menu (☰ icon, top-left) for every import/export option.
 
 ## Importing
 
-**Open .excalidraw file…** in the menu lets you pick a previously-saved `.excalidraw` file from your device and load it onto the canvas.
+**Open .drawdp file…** in the menu lets you pick a previously-saved `.drawdp` file from your device and load it onto the canvas. (Files saved before this rename, with the old `.excalidraw` extension, still open fine too.)
 
 > Importing replaces what's currently on the canvas. If you have unsaved work you want to keep, export it first.
 
